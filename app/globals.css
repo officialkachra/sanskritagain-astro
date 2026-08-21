@@ -21,3 +21,82 @@ button, input, select, textarea {
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-saffron focus:ring-offset-2;
 }
+
+@keyframes chakraSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes chakraBreath {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(1.025);
+  }
+}
+
+@keyframes grahFloat {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) translateY(-8px);
+  }
+}
+
+@keyframes grahPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(199, 168, 59, 0.32);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(199, 168, 59, 0);
+  }
+}
+
+@keyframes kundliGlow {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.chakra-spin {
+  animation: chakraSpin 42s linear infinite;
+}
+
+.grah-float {
+  animation: grahFloat 4.8s ease-in-out infinite;
+}
+
+.grah-pulse {
+  animation: grahPulse 2.2s ease-in-out infinite;
+}
+
+.kundli-line {
+  animation: kundliGlow 3.6s ease-in-out infinite;
+}
+
+.birth-card-rays {
+  background:
+    repeating-conic-gradient(from 0deg, rgba(31, 49, 80, 0.22) 0deg 1deg, transparent 1deg 10deg),
+    radial-gradient(circle, transparent 0 45%, rgba(199, 168, 59, 0.18) 46% 48%, transparent 49%);
+  animation: chakraSpin 90s linear infinite;
+}
