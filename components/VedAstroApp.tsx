@@ -194,6 +194,15 @@ export default function VedAstroApp() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const currentBirth: BirthDetails = {
+      name: String(formData.get("name") ?? "").trim(),
+      place: String(formData.get("place") ?? "").trim(),
+      date: String(formData.get("date") ?? "").trim(),
+      time: String(formData.get("time") ?? "").trim()
+    };
+
+    setBirth(currentBirth);
     setIsLoading(true);
     setError("");
 
@@ -203,21 +212,22 @@ export default function VedAstroApp() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(birth)
+        body: JSON.stringify(currentBirth)
       });
 
       if (!response.ok) {
-        throw new Error("Chart calculation failed.");
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Chart calculation failed.");
       }
 
       const nextReading = (await response.json()) as AstrologyReading;
-      setSubmitted(birth);
+      setSubmitted(currentBirth);
       setReading(nextReading);
       setOpenPlanet("Moon");
-    } catch {
+    } catch (submitError) {
       setSubmitted(null);
       setReading(null);
-      setError("Chart generate nahi hua. Birth place ko clearer likho, jaise 'Ujjain, Madhya Pradesh, India', ya coordinates use karo: 23.1765, 75.7885.");
+      setError(submitError instanceof Error ? submitError.message : "Chart generate nahi hua. Please check DOB, time, and birth place.");
     } finally {
       setIsLoading(false);
     }
@@ -320,10 +330,10 @@ export default function VedAstroApp() {
               <p className="text-xs uppercase tracking-[0.28em] text-[#c58f72]">Create your chart</p>
               <h2 className="mt-3 font-serif text-3xl">Birth details</h2>
               <div className="mt-6 grid gap-4">
-                <Field icon={UserRound} label="Name" value={birth.name} onChange={(value) => updateField("name", value)} placeholder="Full name" />
-                <Field icon={MapPin} label="Birth place" value={birth.place} onChange={(value) => updateField("place", value)} placeholder="City, State, Country" />
-                <Field icon={CalendarDays} label="Date of birth" type="date" value={birth.date} onChange={(value) => updateField("date", value)} />
-                <Field icon={Clock3} label="Birth time" type="time" value={birth.time} onChange={(value) => updateField("time", value)} />
+                <Field fieldName="name" icon={UserRound} label="Name" value={birth.name} onChange={(value) => updateField("name", value)} placeholder="Full name" />
+                <Field fieldName="place" icon={MapPin} label="Birth place" value={birth.place} onChange={(value) => updateField("place", value)} placeholder="City, State, Country" />
+                <Field fieldName="date" icon={CalendarDays} label="Date of birth" value={birth.date} onChange={(value) => updateField("date", value)} placeholder="YYYY-MM-DD, e.g. 1998-08-21" />
+                <Field fieldName="time" icon={Clock3} label="Birth time" value={birth.time} onChange={(value) => updateField("time", value)} placeholder="HH:MM, e.g. 06:18" />
               </div>
               <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-[#eee9dc] px-4 py-3 font-semibold text-[#111710] transition hover:bg-[#97aaff] disabled:cursor-wait disabled:opacity-70" type="submit" disabled={isLoading}>
                 {isLoading ? "Calculating chart" : "Generate reading"} <ArrowRight className="h-4 w-4" />
@@ -548,6 +558,7 @@ function EmptyChart() {
 }
 
 function Field({
+  fieldName,
   icon: Icon,
   label,
   value,
@@ -555,6 +566,7 @@ function Field({
   placeholder,
   type = "text"
 }: {
+  fieldName: keyof BirthDetails;
   icon: LucideIcon;
   label: string;
   value: string;
@@ -570,7 +582,10 @@ function Field({
       </span>
       <input
         className="w-full rounded-md border border-[#303930] bg-[#0c110d] px-3 py-3 text-[#eee9dc] outline-none transition placeholder:text-[#666b64] focus:border-[#97aaff]"
+        data-testid={`birth-${fieldName}`}
+        name={fieldName}
         placeholder={placeholder}
+        required
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
