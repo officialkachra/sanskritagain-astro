@@ -2,6 +2,9 @@
   "name": "worker-production-management",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "node node_modules/next/dist/bin/next dev",
     "build": "node node_modules/next/dist/bin/next build",
@@ -43,5 +46,8 @@
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.3"
+  },
+  "overrides": {
+    "node-gyp": "^10.3.1"
   }
 }
