@@ -206,13 +206,17 @@ export default function VedAstroApp() {
     setIsLoading(true);
     setError("");
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
     try {
       const response = await fetch("/api/astro/chart", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(currentBirth)
+        body: JSON.stringify(currentBirth),
+        signal: controller.signal
       });
 
       if (!response.ok) {
@@ -227,8 +231,15 @@ export default function VedAstroApp() {
     } catch (submitError) {
       setSubmitted(null);
       setReading(null);
-      setError(submitError instanceof Error ? submitError.message : "Chart generate nahi hua. Please check DOB, time, and birth place.");
+      setError(
+        submitError instanceof DOMException && submitError.name === "AbortError"
+          ? "Chart request timeout ho gaya. Birth place city/state/country format me likho, ya coordinates use karo: 23.1765, 75.7885."
+          : submitError instanceof Error
+            ? submitError.message
+            : "Chart generate nahi hua. Please check DOB, time, and birth place."
+      );
     } finally {
+      clearTimeout(timeout);
       setIsLoading(false);
     }
   }
@@ -338,6 +349,9 @@ export default function VedAstroApp() {
               <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-[#eee9dc] px-4 py-3 font-semibold text-[#111710] transition hover:bg-[#97aaff] disabled:cursor-wait disabled:opacity-70" type="submit" disabled={isLoading}>
                 {isLoading ? "Calculating chart" : "Generate reading"} <ArrowRight className="h-4 w-4" />
               </button>
+              {isLoading ? (
+                <p className="mt-3 text-xs leading-6 text-[#97aaff]">Swiss Ephemeris se chart calculate ho raha hai. Usually 2-5 seconds lagte hain.</p>
+              ) : null}
               <p className="mt-4 text-xs leading-6 text-[#8f9189]">
                 {reading ? `Engine: ${reading.engine === "swiss-ephemeris" ? "Swiss Ephemeris" : "Sidereal fallback"}. Location: ${reading.coordinates.source}. ${reading.note}` : "No default chart is shown. Every result is generated from the details entered above."}
               </p>

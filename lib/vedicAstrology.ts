@@ -1,5 +1,3 @@
-import swisseph from "swisseph";
-
 export type BirthDetails = {
   name: string;
   place: string;
@@ -98,6 +96,23 @@ const knownPlaces: Array<{ match: string; latitude: number; longitude: number; t
   { match: "kolkata", latitude: 22.5726, longitude: 88.3639, timezone: "Asia/Kolkata" },
   { match: "chennai", latitude: 13.0827, longitude: 80.2707, timezone: "Asia/Kolkata" },
   { match: "hyderabad", latitude: 17.385, longitude: 78.4867, timezone: "Asia/Kolkata" },
+  { match: "lucknow", latitude: 26.8467, longitude: 80.9462, timezone: "Asia/Kolkata" },
+  { match: "kanpur", latitude: 26.4499, longitude: 80.3319, timezone: "Asia/Kolkata" },
+  { match: "bhopal", latitude: 23.2599, longitude: 77.4126, timezone: "Asia/Kolkata" },
+  { match: "nagpur", latitude: 21.1458, longitude: 79.0882, timezone: "Asia/Kolkata" },
+  { match: "surat", latitude: 21.1702, longitude: 72.8311, timezone: "Asia/Kolkata" },
+  { match: "patna", latitude: 25.5941, longitude: 85.1376, timezone: "Asia/Kolkata" },
+  { match: "ranchi", latitude: 23.3441, longitude: 85.3096, timezone: "Asia/Kolkata" },
+  { match: "raipur", latitude: 21.2514, longitude: 81.6296, timezone: "Asia/Kolkata" },
+  { match: "chandigarh", latitude: 30.7333, longitude: 76.7794, timezone: "Asia/Kolkata" },
+  { match: "dehradun", latitude: 30.3165, longitude: 78.0322, timezone: "Asia/Kolkata" },
+  { match: "coimbatore", latitude: 11.0168, longitude: 76.9558, timezone: "Asia/Kolkata" },
+  { match: "kochi", latitude: 9.9312, longitude: 76.2673, timezone: "Asia/Kolkata" },
+  { match: "guwahati", latitude: 26.1445, longitude: 91.7362, timezone: "Asia/Kolkata" },
+  { match: "jodhpur", latitude: 26.2389, longitude: 73.0243, timezone: "Asia/Kolkata" },
+  { match: "udaipur", latitude: 24.5854, longitude: 73.7125, timezone: "Asia/Kolkata" },
+  { match: "nashik", latitude: 19.9975, longitude: 73.7898, timezone: "Asia/Kolkata" },
+  { match: "gwalior", latitude: 26.2183, longitude: 78.1828, timezone: "Asia/Kolkata" },
   { match: "london", latitude: 51.5072, longitude: -0.1276, timezone: "Europe/London" },
   { match: "new york", latitude: 40.7128, longitude: -74.006, timezone: "America/New_York" }
 ];
@@ -153,37 +168,46 @@ function parseCoordinatePlace(place: string) {
 }
 
 async function geocodePlace(place: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2500);
   const url = new URL("https://nominatim.openstreetmap.org/search");
   url.searchParams.set("q", place);
   url.searchParams.set("format", "json");
   url.searchParams.set("limit", "1");
 
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "sanskritagain-astro/1.0"
-    },
-    next: {
-      revalidate: 60 * 60 * 24 * 30
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "sanskritagain-astro/1.0"
+      },
+      next: {
+        revalidate: 60 * 60 * 24 * 30
+      },
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      return null;
     }
-  });
 
-  if (!response.ok) {
+    const results = (await response.json()) as Array<{ lat?: string; lon?: string; display_name?: string }>;
+    const first = results[0];
+
+    if (!first?.lat || !first.lon) {
+      return null;
+    }
+
+    return {
+      latitude: Number(first.lat),
+      longitude: Number(first.lon),
+      timezone: "Asia/Kolkata",
+      source: first.display_name ? `geocoded: ${first.display_name}` : "geocoded"
+    };
+  } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const results = (await response.json()) as Array<{ lat?: string; lon?: string; display_name?: string }>;
-  const first = results[0];
-
-  if (!first?.lat || !first.lon) {
-    return null;
-  }
-
-  return {
-    latitude: Number(first.lat),
-    longitude: Number(first.lon),
-    timezone: "Asia/Kolkata",
-    source: first.display_name ? `geocoded: ${first.display_name}` : "geocoded"
-  };
 }
 
 async function getCoordinates(place: string) {
@@ -278,7 +302,8 @@ type SwissModule = {
 
 async function trySwissReading(input: BirthDetails): Promise<AstrologyReading | null> {
   try {
-    const swe = swisseph as SwissModule;
+    const runtimeRequire = eval("require") as (moduleName: string) => unknown;
+    const swe = runtimeRequire("swisseph") as SwissModule;
     if (!swe.swe_calc_ut || !swe.swe_julday) {
       return null;
     }

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { calculateVedicChart } from "@/lib/vedicAstrology";
 
 export const runtime = "nodejs";
+export const maxDuration = 10;
 
 const chartRequestSchema = z.object({
   name: z.string().trim().min(1).max(80),
