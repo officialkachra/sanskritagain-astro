@@ -9,14 +9,20 @@ import {
   Clock3,
   Compass,
   Gem,
+  Heart,
+  Home,
   MapPin,
+  MessageCircle,
   Moon,
   PackageCheck,
+  PhoneCall,
   Share2,
+  ShieldCheck,
   Sparkles,
   Star,
   Sun,
-  UserRound
+  UserRound,
+  WandSparkles
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { AstrologyReading, BirthDetails, Placement } from "@/lib/vedicAstrology";
@@ -94,9 +100,54 @@ const products = [
 
 const navItems: Array<{ label: string; Icon: LucideIcon; href: string }> = [
   { label: "Ved", Icon: Star, href: "#ved" },
+  { label: "Tools", Icon: WandSparkles, href: "#free-tools" },
   { label: "Today", Icon: CalendarDays, href: "#today" },
   { label: "Products", Icon: PackageCheck, href: "#products" },
   { label: "Charts", Icon: CircleDot, href: "#charts" }
+];
+
+const freeTools: Array<{ title: string; tag: string; text: string; Icon: LucideIcon }> = [
+  { title: "Free Kundli", tag: "60 sec chart", text: "Birth chart, ascendant, Moon sign, planets, houses and clear house-wise text.", Icon: Star },
+  { title: "Kundli Matching", tag: "Guna milan", text: "Compare two charts for 36-guna score, Manglik signal, Nadi check and relationship notes.", Icon: Heart },
+  { title: "Daily Panchang", tag: "City timing", text: "Tithi, Nakshatra, Yoga, Karana, Rahu Kaal, Hora, sunrise and sunset windows.", Icon: CalendarDays },
+  { title: "Daily Horoscope", tag: "12 rashis", text: "Today, tomorrow, week and month readings for every rashi in one beautiful picker.", Icon: Moon },
+  { title: "Numerology", tag: "Name + DOB", text: "Life path, name number, lucky number and Lo Shu style personality grid preview.", Icon: CircleDot },
+  { title: "Planet Transit", tag: "Live grah", text: "Current sidereal planet positions with animated grah movement and practical meaning.", Icon: Sparkles },
+  { title: "Subh Muhurat", tag: "Good windows", text: "Auspicious windows for puja, study, purchase, travel, launch and new sankalp.", Icon: ShieldCheck },
+  { title: "Vastu Guidance", tag: "Home energy", text: "Directional guidance for home, office, entrance, work desk and remedy suggestions.", Icon: Home },
+  { title: "Tarot Reading", tag: "3-card pull", text: "Love, career and finance spread as a light reflection layer beside the kundli.", Icon: WandSparkles },
+  { title: "Talk to Astrologer", tag: "Coming soon", text: "Chat/call style expert cards can plug into your own astrologer network later.", Icon: MessageCircle },
+  { title: "Book Pooja", tag: "Remedies", text: "Match chart pressure with Vishnu Sahasranama, Sunderkand, Lakshmi Narayan and puja kits.", Icon: Gem },
+  { title: "Ask AI Ved", tag: "Chart-aware", text: "AI guidance can answer with kundli context, dasha, transits and house placements.", Icon: PhoneCall }
+];
+
+const panchangItems = [
+  { label: "Current Hora", value: "Guru Hora", detail: "wisdom, study, mantra" },
+  { label: "Tithi", value: "Shukla Paksha", detail: "growth and clarity" },
+  { label: "Nakshatra", value: "Pushya", detail: "nourishing work" },
+  { label: "Rahu Kaal", value: "Avoid rush", detail: "keep decisions calm" },
+  { label: "Abhijit", value: "Midday window", detail: "clean starts" }
+];
+
+const expertCategories = [
+  "Love",
+  "Marriage & Kundli",
+  "Career",
+  "Business & Money",
+  "Health & Family",
+  "Women astrologers",
+  "Vastu",
+  "Tarot",
+  "Numerology"
+];
+
+const horoscopePeriods = ["Today", "Tomorrow", "Week", "Month"];
+
+const horoscopeLines = [
+  "Keep the first half simple. One clear decision gives better results than five scattered starts.",
+  "A conversation settles when you stop defending the old version of the story.",
+  "Money improves through discipline today: write the number, then choose the action.",
+  "Your energy rises when routine becomes devotional instead of mechanical."
 ];
 
 const houseTopics = [
@@ -184,6 +235,8 @@ export default function VedAstroApp() {
   const [reading, setReading] = useState<AstrologyReading | null>(null);
   const [activeLens, setActiveLens] = useState("Self");
   const [openPlanet, setOpenPlanet] = useState("Moon");
+  const [activeRashi, setActiveRashi] = useState("Mesha");
+  const [activePeriod, setActivePeriod] = useState("Today");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const hasReading = Boolean(reading && submitted);
@@ -354,6 +407,113 @@ export default function VedAstroApp() {
               </div>
             </section>
           )}
+
+          <section id="free-tools" className="mx-auto max-w-[1780px] px-5 pb-10 md:px-10">
+            <div className="grid gap-8 lg:grid-cols-[0.72fr_1fr]">
+              <div className="border-y border-[#2b2a21] py-14">
+                <p className="text-xs uppercase tracking-[0.34em] text-[#c7a83b]">Free astrology tools</p>
+                <h2 className="mt-5 max-w-3xl font-serif text-5xl leading-none text-[#e9e1cf] md:text-7xl">
+                  Everything free users expect, <span className="italic text-[#aebcff]">inside our design.</span>
+                </h2>
+                <p className="mt-7 max-w-2xl text-lg leading-8 text-[#8d897f]">
+                  Kundli, matching, panchang, horoscope, numerology, transit, muhurat, vastu, tarot, pooja and chart-aware guidance are presented as one SanskritAgain astrology hub.
+                </p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  {expertCategories.map((category) => (
+                    <span key={category} className="border border-[#2b2a21] bg-[#090b08] px-4 py-2 text-xs uppercase tracking-[0.16em] text-[#aaa49a]">
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {freeTools.map(({ title, tag, text, Icon }, index) => (
+                  <article
+                    key={title}
+                    className="group relative min-h-[190px] overflow-hidden border border-[#2b2a21] bg-[#090b08] p-5 transition hover:-translate-y-1 hover:border-[#c7a83b]/60"
+                  >
+                    <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full border border-[#c7a83b]/10 transition group-hover:scale-125" />
+                    <div className="flex items-start justify-between gap-4">
+                      <Icon className="h-6 w-6 text-[#c7a83b]" />
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-[#aebcff]">0{(index % 9) + 1}</span>
+                    </div>
+                    <h3 className="mt-8 font-serif text-3xl leading-none text-[#e9e1cf]">{title}</h3>
+                    <p className="mt-2 text-xs uppercase tracking-[0.2em] text-[#c7a83b]">{tag}</p>
+                    <p className="mt-4 text-sm leading-6 text-[#8d897f]">{text}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="mx-auto grid max-w-[1780px] gap-8 px-5 pb-10 md:px-10 xl:grid-cols-[1fr_0.9fr]">
+            <div className="border border-[#2b2a21] bg-[#090b08] p-6 md:p-10">
+              <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.34em] text-[#c7a83b]">Daily horoscope</p>
+                  <h2 className="mt-3 font-serif text-4xl text-[#e9e1cf]">Pick your rashi</h2>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {horoscopePeriods.map((period) => (
+                    <button
+                      key={period}
+                      className={`border px-4 py-2 text-xs uppercase tracking-[0.16em] ${activePeriod === period ? "border-[#c7a83b] bg-[#171408] text-[#c7a83b]" : "border-[#2b2a21] text-[#777268]"}`}
+                      type="button"
+                      onClick={() => setActivePeriod(period)}
+                    >
+                      {period}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                {rashis.map((rashi, index) => (
+                  <button
+                    key={rashi}
+                    className={`border px-3 py-3 text-left transition ${activeRashi === rashi ? "border-[#c7a83b] bg-[#171408]" : "border-[#2b2a21] bg-[#050805] hover:border-[#c7a83b]/40"}`}
+                    type="button"
+                    onClick={() => setActiveRashi(rashi)}
+                  >
+                    <span className="block font-serif text-xl text-[#e9e1cf]">{rashi}</span>
+                    <span className="mt-1 block text-xs uppercase tracking-[0.16em] text-[#777268]">{westernSigns[index]}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-8 border border-[#242319] bg-[#050805] p-5">
+                <p className="text-xs uppercase tracking-[0.26em] text-[#c7a83b]">{activePeriod} / {activeRashi}</p>
+                <p className="mt-4 max-w-3xl font-serif text-3xl leading-tight text-[#e9e1cf]">
+                  {horoscopeLines[(rashis.indexOf(activeRashi) + horoscopePeriods.indexOf(activePeriod)) % horoscopeLines.length]}
+                </p>
+                <p className="mt-4 text-sm leading-6 text-[#8d897f]">
+                  Yeh general rashi reading hai. Personal kundli submit karne ke baad Moon, Lagna, house aur grah placement ke hisaab se guidance zyada exact ho jaati hai.
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-hidden border border-[#2b2a21] bg-[#090b08] p-6 md:p-10">
+              <p className="text-xs uppercase tracking-[0.34em] text-[#c7a83b]">Panchang now</p>
+              <h2 className="mt-3 font-serif text-4xl text-[#e9e1cf]">Timing layer</h2>
+              <div className="mt-8 space-y-3">
+                {panchangItems.map((item, index) => (
+                  <div key={item.label} className="group grid grid-cols-[44px_1fr] gap-4 border border-[#242319] bg-[#050805] p-4">
+                    <div className="grid h-11 w-11 place-items-center rounded-full border border-[#3c371f] text-sm text-[#c7a83b] grah-pulse">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-serif text-2xl text-[#e9e1cf]">{item.value}</p>
+                        <p className="text-[10px] uppercase tracking-[0.18em] text-[#777268]">{item.label}</p>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-[#8d897f]">{item.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
 
           <section id="charts" className="mx-auto grid max-w-[1780px] gap-8 px-5 pb-10 md:px-10 lg:grid-cols-[0.8fr_1fr]">
             <div className="border-y border-[#2b2a21] py-14">
