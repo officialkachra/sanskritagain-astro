@@ -157,7 +157,8 @@ function buildReading(input: BirthDetails): AstrologyReading {
     coordinates: {
       latitude: 23.1765,
       longitude: 75.7885,
-      timezone: "Asia/Kolkata"
+      timezone: "Asia/Kolkata",
+      source: "local preview"
     },
     engine: "sidereal-preview",
     note: "Preview chart shown until the server engine responds.",
@@ -214,9 +215,9 @@ export default function VedAstroApp() {
       setReading(nextReading);
       setOpenPlanet("Moon");
     } catch {
-      setSubmitted(birth);
-      setReading(buildReading(birth));
-      setError("Server engine did not respond, so this preview is using the local sidereal fallback.");
+      setSubmitted(null);
+      setReading(null);
+      setError("Chart generate nahi hua. Birth place ko clearer likho, jaise 'Ujjain, Madhya Pradesh, India', ya coordinates use karo: 23.1765, 75.7885.");
     } finally {
       setIsLoading(false);
     }
@@ -274,7 +275,7 @@ export default function VedAstroApp() {
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-[#b9b3a8]">
                 {hasReading && reading && submitted
-                  ? `${submitted.name} carries a ${reading.element.toLowerCase()}-led inner sky. ${reading.guidePlanet.label} is asking for attention through house H${reading.guidePlanet.house}, so the practical focus becomes ${reading.focus}.`
+                  ? `${submitted.name} ka chart ${submitted.date} ${submitted.time} at ${submitted.place} se generate hua hai. Moon ${reading.moon.rashi} me hai, aur ${reading.guidePlanet.label} house H${reading.guidePlanet.house} par focus la raha hai.`
                   : "Har user apna naam, birthplace, DOB, aur birth time dalega. Tab Swiss Ephemeris se usi person ka chart aur house reading generate hogi."}
               </p>
 
@@ -343,7 +344,7 @@ export default function VedAstroApp() {
                 {isLoading ? "Calculating chart" : "Generate reading"} <ArrowRight className="h-4 w-4" />
               </button>
               <p className="mt-4 text-xs leading-6 text-[#8f9189]">
-                {reading ? `Engine: ${reading.engine === "swiss-ephemeris" ? "Swiss Ephemeris" : "Sidereal fallback"}. ${reading.note}` : "No default chart is shown. Every result is generated from the details entered above."}
+                {reading ? `Engine: ${reading.engine === "swiss-ephemeris" ? "Swiss Ephemeris" : "Sidereal fallback"}. Location: ${reading.coordinates.source}. ${reading.note}` : "No default chart is shown. Every result is generated from the details entered above."}
               </p>
               {error ? <p className="mt-3 text-xs leading-6 text-[#d9945c]">{error}</p> : null}
             </form>

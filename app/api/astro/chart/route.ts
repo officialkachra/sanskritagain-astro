@@ -24,6 +24,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const reading = await calculateVedicChart(parsed.data);
-  return NextResponse.json(reading);
+  try {
+    const reading = await calculateVedicChart(parsed.data);
+    return NextResponse.json(reading);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Chart calculation failed."
+      },
+      { status: 400 }
+    );
+  }
 }

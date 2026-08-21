@@ -26,6 +26,7 @@ export type AstrologyReading = {
     latitude: number;
     longitude: number;
     timezone: string;
+    source: string;
   };
   engine: "swiss-ephemeris" | "sidereal-preview";
   note: string;
@@ -83,7 +84,7 @@ const planetInfo = [
   { key: "ketu", swissId: 10, label: "Ketu", tone: "#bfc7ca", meaning: "your detachment, past mastery, intuition, and release", period: -6798.38, base: 305.044 }
 ];
 
-const knownPlaces: Array<{ match: string; latitude: number; longitude: number; timezone: string }> = [
+const knownPlaces: Array<{ match: string; latitude: number; longitude: number; timezone: string; source?: string }> = [
   { match: "ujjain", latitude: 23.1765, longitude: 75.7885, timezone: "Asia/Kolkata" },
   { match: "indore", latitude: 22.7196, longitude: 75.8577, timezone: "Asia/Kolkata" },
   { match: "delhi", latitude: 28.6139, longitude: 77.209, timezone: "Asia/Kolkata" },
@@ -130,15 +131,107 @@ function hashBirth(input: BirthDetails) {
   return [...joined].reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 17), 0);
 }
 
-function getCoordinates(place: string) {
-  const normalized = place.toLowerCase();
-  return knownPlaces.find((item) => normalized.includes(item.match)) ?? knownPlaces[0];
+function parseCoordinatePlace(place: string) {
+  const match = place.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (!match) {
+    return null;
+  }
+
+  const latitude = Number(match[1]);
+  const longitude = Number(match[2]);
+
+  if (Number.isNaN(latitude) || Number.isNaN(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    return null;
+  }
+
+  return {
+    latitude,
+    longitude,
+    timezone: "Asia/Kolkata",
+    source: "manual coordinates"
+  };
 }
 
-function julianDay(date: string, time: string) {
+async function geocodePlace(place: string) {
+  const url = new URL("https://nominatim.openstreetmap.org/search");
+  url.searchParams.set("q", place);
+  url.searchParams.set("format", "json");
+  url.searchParams.set("limit", "1");
+
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "sanskritagain-astro/1.0"
+    },
+    next: {
+      revalidate: 60 * 60 * 24 * 30
+    }
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const results = (await response.json()) as Array<{ lat?: string; lon?: string; display_name?: string }>;
+  const first = results[0];
+
+  if (!first?.lat || !first.lon) {
+    return null;
+  }
+
+  return {
+    latitude: Number(first.lat),
+    longitude: Number(first.lon),
+    timezone: "Asia/Kolkata",
+    source: first.display_name ? `geocoded: ${first.display_name}` : "geocoded"
+  };
+}
+
+async function getCoordinates(place: string) {
+  const normalized = place.toLowerCase();
+  const manual = parseCoordinatePlace(place);
+  if (manual) {
+    return manual;
+  }
+
+  const known = knownPlaces.find((item) => normalized.includes(item.match));
+  if (known) {
+    return {
+      ...known,
+      source: known.source ?? `matched city: ${known.match}`
+    };
+  }
+
+  const geocoded = await geocodePlace(place).catch(() => null);
+  if (geocoded) {
+    return geocoded;
+  }
+
+  throw new Error("Birth place not found. Please enter a clearer city name, or use coordinates like 23.1765, 75.7885.");
+}
+
+function timeZoneOffsetHours(date: string, time: string, timezone: string) {
   const [year, month, day] = date.split("-").map(Number);
   const [hour = 12, minute = 0] = time.split(":").map(Number);
-  const utcHour = hour + minute / 60 - 5.5;
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute));
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).formatToParts(utcGuess);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const zonedAsUtc = Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day), Number(values.hour), Number(values.minute), Number(values.second));
+  return (zonedAsUtc - utcGuess.getTime()) / 3600000;
+}
+
+function julianDay(date: string, time: string, timezone: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour = 12, minute = 0] = time.split(":").map(Number);
+  const utcHour = hour + minute / 60 - timeZoneOffsetHours(date, time, timezone);
   let y = year;
   let m = month;
   if (m <= 2) {
@@ -154,9 +247,9 @@ function lahiriAyanamsa(jd: number) {
   return 24.136 + ((jd - 2451545) / 36525) * 1.396;
 }
 
-function buildFallbackReading(input: BirthDetails): AstrologyReading {
-  const coords = getCoordinates(input.place);
-  const jd = julianDay(input.date || "1998-01-01", input.time || "12:00");
+async function buildFallbackReading(input: BirthDetails): Promise<AstrologyReading> {
+  const coords = await getCoordinates(input.place);
+  const jd = julianDay(input.date || "1998-01-01", input.time || "12:00", coords.timezone);
   const ayanamsa = lahiriAyanamsa(jd);
   const days = jd - 2451545;
   const seed = hashBirth(input);
@@ -190,14 +283,14 @@ async function trySwissReading(input: BirthDetails): Promise<AstrologyReading | 
       return null;
     }
 
+    const coords = await getCoordinates(input.place);
     const [year, month, day] = (input.date || "1998-01-01").split("-").map(Number);
     const [hour = 12, minute = 0] = (input.time || "12:00").split(":").map(Number);
-    const utcHour = hour + minute / 60 - 5.5;
+    const utcHour = hour + minute / 60 - timeZoneOffsetHours(input.date || "1998-01-01", input.time || "12:00", coords.timezone);
     const jd = swe.swe_julday(year, month, day, utcHour, swe.SE_GREG_CAL ?? 1);
     swe.swe_set_sid_mode?.(swe.SE_SIDM_LAHIRI ?? 1, 0, 0);
 
     const flags = (swe.SEFLG_SWIEPH ?? 2) | (swe.SEFLG_SIDEREAL ?? 65536);
-    const coords = getCoordinates(input.place);
     const ayanamsa = lahiriAyanamsa(jd);
     const ascendantLongitude = normalizeDegrees(((hour + minute / 60) / 24) * 360 + coords.longitude - ayanamsa);
     const ascendantIndex = rashiIndex(ascendantLongitude);
@@ -226,7 +319,7 @@ async function trySwissReading(input: BirthDetails): Promise<AstrologyReading | 
 
 function formatReading(
   input: BirthDetails,
-  coords: { latitude: number; longitude: number; timezone: string },
+  coords: { latitude: number; longitude: number; timezone: string; source: string },
   engine: AstrologyReading["engine"],
   placements: Placement[],
   ascendantIndex: number,
@@ -257,5 +350,5 @@ function formatReading(
 
 export async function calculateVedicChart(input: BirthDetails): Promise<AstrologyReading> {
   const swissReading = await trySwissReading(input);
-  return swissReading ?? buildFallbackReading(input);
+  return swissReading ?? (await buildFallbackReading(input));
 }
