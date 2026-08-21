@@ -99,6 +99,21 @@ const navItems: Array<{ label: string; Icon: LucideIcon; href: string }> = [
   { label: "Charts", Icon: CircleDot, href: "#charts" }
 ];
 
+const houseTopics = [
+  "self, body, confidence, and first impression",
+  "money, speech, food habits, and family values",
+  "courage, siblings, skills, and daily effort",
+  "home, mother, property, and emotional foundation",
+  "education, creativity, children, and mantra shakti",
+  "health, routine, service, debt, and competition",
+  "marriage, partnerships, contracts, and public dealing",
+  "sudden change, research, inheritance, and hidden matters",
+  "dharma, guru, father, luck, and higher learning",
+  "career, karma, reputation, and public work",
+  "income, network, gains, and long-term desires",
+  "sleep, moksha, foreign lands, loss, and retreat"
+];
+
 function hashBirth(input: BirthDetails) {
   const joined = `${input.name}|${input.place}|${input.date}|${input.time}`;
   return [...joined].reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 17), 0);
@@ -159,17 +174,18 @@ function buildReading(input: BirthDetails): AstrologyReading {
 
 export default function VedAstroApp() {
   const [birth, setBirth] = useState<BirthDetails>({
-    name: "Yuvraj Vyas",
-    place: "Ujjain, Madhya Pradesh",
-    date: "1998-08-21",
-    time: "06:18"
+    name: "",
+    place: "",
+    date: "",
+    time: ""
   });
-  const [submitted, setSubmitted] = useState(birth);
-  const [reading, setReading] = useState<AstrologyReading>(() => buildReading(birth));
+  const [submitted, setSubmitted] = useState<BirthDetails | null>(null);
+  const [reading, setReading] = useState<AstrologyReading | null>(null);
   const [activeLens, setActiveLens] = useState("Self");
   const [openPlanet, setOpenPlanet] = useState("Moon");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const hasReading = Boolean(reading && submitted);
 
   function updateField(key: keyof BirthDetails, value: string) {
     setBirth((current) => ({ ...current, [key]: value }));
@@ -238,7 +254,7 @@ export default function VedAstroApp() {
           <header className="flex items-center justify-between border-b border-[#252c25] px-5 py-4 md:px-8">
             <p className="text-xs uppercase tracking-[0.35em] text-[#9a8f82]">Your life, mapped</p>
             <div className="grid h-9 w-9 place-items-center rounded-full border border-[#4a5148] text-sm text-[#bbb4a8]">
-              {submitted.name.slice(0, 1) || "S"}
+              {submitted?.name.slice(0, 1) || "S"}
             </div>
           </header>
 
@@ -246,17 +262,27 @@ export default function VedAstroApp() {
             <div className="border border-[#2d352d] bg-[#111710] p-6 shadow-[0_0_80px_rgba(143,167,255,0.07)] md:p-10">
               <p className="text-xs uppercase tracking-[0.28em] text-[#c58f72]">Chart-based guidance</p>
               <h1 className="mt-6 max-w-3xl font-serif text-5xl leading-[0.95] tracking-normal md:text-7xl">
-                Moon in <span className="italic text-[#97aaff]">{reading.moon.rashi}</span>
+                {hasReading && reading ? (
+                  <>
+                    Moon in <span className="italic text-[#97aaff]">{reading.moon.rashi}</span>
+                  </>
+                ) : (
+                  <>
+                    Enter birth details for a <span className="italic text-[#97aaff]">personal kundli.</span>
+                  </>
+                )}
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-[#b9b3a8]">
-                {submitted.name || "Your chart"} carries a {reading.element.toLowerCase()}-led inner sky. {reading.guidePlanet.label} is asking for attention through house H{reading.guidePlanet.house}, so the practical focus becomes {reading.focus}.
+                {hasReading && reading && submitted
+                  ? `${submitted.name} carries a ${reading.element.toLowerCase()}-led inner sky. ${reading.guidePlanet.label} is asking for attention through house H${reading.guidePlanet.house}, so the practical focus becomes ${reading.focus}.`
+                  : "Har user apna naam, birthplace, DOB, aur birth time dalega. Tab Swiss Ephemeris se usi person ka chart aur house reading generate hogi."}
               </p>
 
               <div className="mt-8 grid gap-4 md:grid-cols-3">
                 {[
-                  { label: "Moon", value: reading.moon.rashi, Icon: Moon },
-                  { label: "Nakshatra", value: reading.nakshatra, Icon: Star },
-                  { label: "Ascendant", value: reading.ascendant, Icon: Sun }
+                  { label: "Moon", value: reading?.moon.rashi ?? "After submit", Icon: Moon },
+                  { label: "Nakshatra", value: reading?.nakshatra ?? "After submit", Icon: Star },
+                  { label: "Ascendant", value: reading?.ascendant ?? "After submit", Icon: Sun }
                 ].map(({ label, value, Icon }) => (
                   <div key={label} className="border border-[#2c342d] bg-[#151c14] p-4">
                     <Icon className="h-5 w-5 text-[#97aaff]" />
@@ -267,7 +293,7 @@ export default function VedAstroApp() {
               </div>
 
               <div className="mt-10 grid gap-8 lg:grid-cols-[360px_1fr] lg:items-center">
-                <BirthCard name={submitted.name} moon={reading.moon.rashi} nakshatra={reading.nakshatra} />
+                <BirthCard name={submitted?.name ?? ""} moon={reading?.moon.rashi ?? "Pending"} nakshatra={reading?.nakshatra ?? "Pending"} />
                 <div className="relative mx-auto aspect-square w-full max-w-[430px]">
                   <div className="absolute inset-0 rounded-full border border-[#32415b] bg-[radial-gradient(circle,#1a2119_0_32%,#10191f_33%_56%,#0d1210_57%)]" />
                   {[0, 1, 2, 3].map((ring) => (
@@ -296,7 +322,7 @@ export default function VedAstroApp() {
                   <div className="absolute left-1/2 top-1/2 grid h-32 w-32 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-[#5b473d] bg-[#121811] text-center">
                     <div>
                       <Sparkles className="mx-auto h-5 w-5 text-[#d9945c]" />
-                      <p className="mt-2 font-serif text-2xl">{reading.ascendant}</p>
+                      <p className="mt-2 font-serif text-2xl">{reading?.ascendant ?? "Lagna"}</p>
                       <p className="text-[10px] uppercase tracking-[0.22em] text-[#a9917c]">Lagna</p>
                     </div>
                   </div>
@@ -317,7 +343,7 @@ export default function VedAstroApp() {
                 {isLoading ? "Calculating chart" : "Generate reading"} <ArrowRight className="h-4 w-4" />
               </button>
               <p className="mt-4 text-xs leading-6 text-[#8f9189]">
-                Engine: {reading.engine === "swiss-ephemeris" ? "Swiss Ephemeris" : "Sidereal fallback"}. {reading.note}
+                {reading ? `Engine: ${reading.engine === "swiss-ephemeris" ? "Swiss Ephemeris" : "Sidereal fallback"}. ${reading.note}` : "No default chart is shown. Every result is generated from the details entered above."}
               </p>
               {error ? <p className="mt-3 text-xs leading-6 text-[#d9945c]">{error}</p> : null}
             </form>
@@ -346,9 +372,11 @@ export default function VedAstroApp() {
                   </button>
                 ))}
               </div>
-              <NorthIndianChart placements={reading.placements} lens={activeLens} />
+              {reading ? <NorthIndianChart placements={reading.placements} lens={activeLens} /> : <EmptyChart />}
             </div>
           </section>
+
+          {reading ? <HouseSummary reading={reading} /> : null}
 
           <section id="today" className="mx-auto max-w-7xl px-5 pb-8 md:px-8">
             <div className="border border-[#2d352d] bg-[#111710] p-6 md:p-10">
@@ -360,7 +388,7 @@ export default function VedAstroApp() {
                 <p className="text-sm uppercase tracking-[0.22em] text-[#8f9189]">Rashi / House / Degree</p>
               </div>
               <div className="mt-8 divide-y divide-[#222922]">
-                {reading.placements.map((placement) => (
+                {(reading?.placements ?? []).map((placement) => (
                   <button
                     key={placement.label}
                     className="grid w-full gap-3 py-5 text-left md:grid-cols-[1fr_150px_80px_90px_28px] md:items-center"
@@ -387,6 +415,11 @@ export default function VedAstroApp() {
                     <ChevronDown className={`h-4 w-4 text-[#8f9189] transition ${openPlanet === placement.label ? "rotate-180" : ""}`} />
                   </button>
                 ))}
+                {!reading ? (
+                  <div className="py-10 text-sm leading-7 text-[#8f9189]">
+                    Fill the birth form and generate a chart. Planet placement text will appear here for that exact user.
+                  </div>
+                ) : null}
               </div>
             </div>
           </section>
@@ -424,6 +457,69 @@ export default function VedAstroApp() {
         </div>
       </div>
     </main>
+  );
+}
+
+function HouseSummary({ reading }: { reading: AstrologyReading }) {
+  const byHouse = Array.from({ length: 12 }, (_, index) => {
+    const house = index + 1;
+    return {
+      house,
+      topic: houseTopics[index],
+      placements: reading.placements.filter((placement) => placement.house === house)
+    };
+  });
+
+  return (
+    <section className="mx-auto max-w-7xl px-5 pb-8 md:px-8">
+      <div className="border border-[#2d352d] bg-[#111710] p-6 md:p-10">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <p className="text-xs uppercase tracking-[0.28em] text-[#c58f72]">Clear house reading</p>
+            <h2 className="mt-3 font-serif text-4xl">Kis house me kya hai</h2>
+          </div>
+          <p className="max-w-md text-sm leading-6 text-[#8f9189]">
+            Lagna is {reading.ascendant}. Houses are counted from the ascendant, so this is the user-specific house map.
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {byHouse.map(({ house, topic, placements }) => (
+            <article key={house} className="border border-[#293129] bg-[#151c14] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="font-serif text-2xl">House {house}</h3>
+                <span className="rounded-md border border-[#394139] px-2 py-1 text-xs text-[#aebcff]">H{house}</span>
+              </div>
+              <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[#8f9189]">{topic}</p>
+              {placements.length > 0 ? (
+                <div className="mt-4 space-y-3">
+                  {placements.map((placement) => (
+                    <p key={placement.label} className="text-sm leading-6 text-[#c8c1b6]">
+                      <span className="font-semibold text-[#eee9dc]">{placement.label}</span>
+                      {placement.retrograde ? <span className="text-[#d9945c]"> retrograde</span> : null} is in {placement.rashi} ({placement.sign}) at {placement.degree.toFixed(1)} degree.
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm leading-6 text-[#8f9189]">No major planet placed here. Judge this house through its rashi lord and aspects in the full reading.</p>
+              )}
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function EmptyChart() {
+  return (
+    <div className="mx-auto grid aspect-square w-full max-w-[430px] place-items-center border border-[#34425f] bg-[#101610] p-8 text-center">
+      <div>
+        <CircleDot className="mx-auto h-8 w-8 text-[#97aaff]" />
+        <p className="mt-4 font-serif text-3xl">Chart pending</p>
+        <p className="mt-3 text-sm leading-6 text-[#8f9189]">Enter birth details to generate the kundli, house positions, and product recommendations.</p>
+      </div>
+    </div>
   );
 }
 
