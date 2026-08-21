@@ -279,56 +279,41 @@ export default function VedAstroApp() {
                   : "Har user apna naam, birthplace, DOB, aur birth time dalega. Tab Swiss Ephemeris se usi person ka chart aur house reading generate hogi."}
               </p>
 
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                {[
-                  { label: "Moon", value: reading?.moon.rashi ?? "After submit", Icon: Moon },
-                  { label: "Nakshatra", value: reading?.nakshatra ?? "After submit", Icon: Star },
-                  { label: "Ascendant", value: reading?.ascendant ?? "After submit", Icon: Sun }
-                ].map(({ label, value, Icon }) => (
-                  <div key={label} className="border border-[#2c342d] bg-[#151c14] p-4">
-                    <Icon className="h-5 w-5 text-[#97aaff]" />
-                    <p className="mt-4 font-serif text-2xl">{value}</p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[#c58f72]">{label}</p>
+              {reading && submitted ? (
+                <>
+                  <div className="mt-8 grid gap-4 md:grid-cols-3">
+                    {[
+                      { label: "Moon", value: reading.moon.rashi, Icon: Moon },
+                      { label: "Nakshatra", value: reading.nakshatra, Icon: Star },
+                      { label: "Ascendant", value: reading.ascendant, Icon: Sun }
+                    ].map(({ label, value, Icon }) => (
+                      <div key={label} className="border border-[#2c342d] bg-[#151c14] p-4">
+                        <Icon className="h-5 w-5 text-[#97aaff]" />
+                        <p className="mt-4 font-serif text-2xl">{value}</p>
+                        <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[#c58f72]">{label}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              <div className="mt-10 grid gap-8 lg:grid-cols-[360px_1fr] lg:items-center">
-                <BirthCard name={submitted?.name ?? ""} moon={reading?.moon.rashi ?? "Pending"} nakshatra={reading?.nakshatra ?? "Pending"} />
-                <div className="relative mx-auto aspect-square w-full max-w-[430px]">
-                  <div className="absolute inset-0 rounded-full border border-[#32415b] bg-[radial-gradient(circle,#1a2119_0_32%,#10191f_33%_56%,#0d1210_57%)]" />
-                  {[0, 1, 2, 3].map((ring) => (
-                    <div
-                      key={ring}
-                      className="absolute rounded-full border border-[#39423b]/70"
-                      style={{ inset: `${9 + ring * 10}%` }}
-                    />
-                  ))}
-                  {rashis.map((rashi, index) => {
-                    const angle = index * 30 - 90;
-                    const x = 50 + Math.cos((angle * Math.PI) / 180) * 43;
-                    const y = 50 + Math.sin((angle * Math.PI) / 180) * 43;
-                    return (
-                      <button
-                        key={rashi}
-                        className="absolute grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-[#516054] bg-[#111811] text-xs text-[#d9d3c7] shadow-lg transition hover:border-[#97aaff] hover:text-[#97aaff]"
-                        style={{ left: `${x}%`, top: `${y}%` }}
-                        type="button"
-                        aria-label={`Explore ${rashi}`}
-                      >
-                        {rashi.slice(0, 2)}
-                      </button>
-                    );
-                  })}
-                  <div className="absolute left-1/2 top-1/2 grid h-32 w-32 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-[#5b473d] bg-[#121811] text-center">
-                    <div>
-                      <Sparkles className="mx-auto h-5 w-5 text-[#d9945c]" />
-                      <p className="mt-2 font-serif text-2xl">{reading?.ascendant ?? "Lagna"}</p>
-                      <p className="text-[10px] uppercase tracking-[0.22em] text-[#a9917c]">Lagna</p>
-                    </div>
+                  <div className="mt-6 border border-[#293129] bg-[#151c14] p-4 text-sm leading-7 text-[#c8c1b6]">
+                    <p>
+                      <span className="font-semibold text-[#eee9dc]">Generated for:</span> {submitted.name} / {submitted.place} / {submitted.date} / {submitted.time}
+                    </p>
+                    <p className="text-[#8f9189]">Note: name se kundli nahi badalti. Kundli DOB, exact birth time, aur birthplace se change hoti hai.</p>
                   </div>
+
+                  <div className="mt-10 grid gap-8 lg:grid-cols-[360px_1fr] lg:items-center">
+                    <BirthCard name={submitted.name} moon={reading.moon.rashi} nakshatra={reading.nakshatra} />
+                    <OrbitChart ascendant={reading.ascendant} />
+                  </div>
+                </>
+              ) : (
+                <div className="mt-10 border border-[#293129] bg-[#151c14] p-6 text-sm leading-7 text-[#b9b3a8]">
+                  <p className="font-semibold text-[#eee9dc]">No sample kundli is loaded.</p>
+                  <p className="mt-2">Form submit karne ke baad hi kundli card, rashi map, planet list aur house-wise text reading dikhegi.</p>
+                  <p className="mt-2 text-[#8f9189]">Agar sirf naam badloge aur DOB/time/place same rakhega, chart same aayega. Astrology chart birth details se calculate hota hai.</p>
                 </div>
-              </div>
+              )}
             </div>
 
             <form className="h-fit border border-[#2d352d] bg-[#151c14] p-5" onSubmit={handleSubmit}>
@@ -458,6 +443,44 @@ export default function VedAstroApp() {
         </div>
       </div>
     </main>
+  );
+}
+
+function OrbitChart({ ascendant }: { ascendant: string }) {
+  return (
+    <div className="relative mx-auto aspect-square w-full max-w-[430px]">
+      <div className="absolute inset-0 rounded-full border border-[#32415b] bg-[radial-gradient(circle,#1a2119_0_32%,#10191f_33%_56%,#0d1210_57%)]" />
+      {[0, 1, 2, 3].map((ring) => (
+        <div
+          key={ring}
+          className="absolute rounded-full border border-[#39423b]/70"
+          style={{ inset: `${9 + ring * 10}%` }}
+        />
+      ))}
+      {rashis.map((rashi, index) => {
+        const angle = index * 30 - 90;
+        const x = 50 + Math.cos((angle * Math.PI) / 180) * 43;
+        const y = 50 + Math.sin((angle * Math.PI) / 180) * 43;
+        return (
+          <button
+            key={rashi}
+            className="absolute grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-[#516054] bg-[#111811] text-xs text-[#d9d3c7] shadow-lg transition hover:border-[#97aaff] hover:text-[#97aaff]"
+            style={{ left: `${x}%`, top: `${y}%` }}
+            type="button"
+            aria-label={`Explore ${rashi}`}
+          >
+            {rashi.slice(0, 2)}
+          </button>
+        );
+      })}
+      <div className="absolute left-1/2 top-1/2 grid h-32 w-32 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-[#5b473d] bg-[#121811] text-center">
+        <div>
+          <Sparkles className="mx-auto h-5 w-5 text-[#d9945c]" />
+          <p className="mt-2 font-serif text-2xl">{ascendant}</p>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-[#a9917c]">Lagna</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
