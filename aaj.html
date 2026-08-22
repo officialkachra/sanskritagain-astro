@@ -31,7 +31,7 @@
     <div>
       <div class="eyebrow" data-i18n="t.eyebrow">Today · 21 August</div>
       <p class="pull" style="margin-top:20px" data-i18n="t.pull"></p>
-      <p class="lede" style="margin-top:26px" data-i18n="t.body"></p>
+      <p class="lede" id="todayBody" style="margin-top:26px;font-size:19px;line-height:1.75;max-width:52ch"></p>
     </div>
 
     <div>
@@ -43,20 +43,8 @@
 
   <section class="section">
     <div class="split" style="align-items:center">
-      <div>
-        <div class="eyebrow" data-i18n="t.do.eyebrow">Today's practice</div>
-        <h2 class="display" style="margin:12px 0 14px" data-i18n="t.do.h">Hanuman Chalisa</h2>
-        <p class="lede" data-i18n="t.do.p">Five minutes.</p>
-        <a class="cta" style="margin-top:24px"
-           href="https://sanskritagain.com/products/hanuman-chalisa"
-           data-i18n="t.do.cta">See the manuscript</a>
-      </div>
-      <div class="leaf-panel" style="text-align:center;padding:46px 30px">
-        <p class="leaf-cap">आज का पाठ</p>
-        <p class="dev" style="font-size:30px;line-height:1.6;margin:0;color:#1A1710">
-          श्रीगुरु चरन सरोज रज<br>निज मनु मुकुरु सुधारि
-        </p>
-      </div>
+      <div id="todayPractice"></div>
+      <div id="yantra"></div>
     </div>
   </section>
 </main>

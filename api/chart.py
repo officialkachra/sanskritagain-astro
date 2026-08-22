@@ -295,7 +295,8 @@ def build_hits(chart):
     cd = current_dasha(chart["dasha"])
     dasha_map = {"Guru": "vishnu_sahasranama", "Shani": "sunderkand",
                  "Mangal": "sunderkand", "Ketu": "bhaktamar", "Rahu": "bhaktamar",
-                 "Shukra": "lalita_sahasranama", "Chandra": "lalita_sahasranama"}
+                 "Shukra": "lalita_sahasranama", "Chandra": "lalita_sahasranama",
+                 "Surya": "vishnu_sahasranama", "Budh": "chalisa_sangrah"}
     if cd and cd["lord"] in dasha_map:
         add(dasha_map[cd["lord"]], 4,
             f"You are running the {cd['lord']} mahadasha right now "
@@ -550,6 +551,16 @@ def antardasha(maha):
     return None, seq
 
 
+NAK_HI = {"Ashwini":"अश्विनी","Bharani":"भरणी","Krittika":"कृत्तिका","Rohini":"रोहिणी",
+"Mrigashira":"मृगशिरा","Ardra":"आर्द्रा","Punarvasu":"पुनर्वसु","Pushya":"पुष्य",
+"Ashlesha":"आश्लेषा","Magha":"मघा","Purva Phalguni":"पूर्वा फाल्गुनी",
+"Uttara Phalguni":"उत्तरा फाल्गुनी","Hasta":"हस्त","Chitra":"चित्रा","Swati":"स्वाति",
+"Vishakha":"विशाखा","Anuradha":"अनुराधा","Jyeshtha":"ज्येष्ठा","Mula":"मूल",
+"Purva Ashadha":"पूर्वाषाढ़ा","Uttara Ashadha":"उत्तराषाढ़ा","Shravana":"श्रवण",
+"Dhanishta":"धनिष्ठा","Shatabhisha":"शतभिषा","Purva Bhadrapada":"पूर्व भाद्रपद",
+"Uttara Bhadrapada":"उत्तर भाद्रपद","Revati":"रेवती"}
+
+
 def panchang(tr, when=None):
     d = when or datetime.now()
     diff = (tr["Chandra"]["longitude"] - tr["Surya"]["longitude"]) % 360
@@ -558,6 +569,7 @@ def panchang(tr, when=None):
     v_en, v_hi, v_lord = VARAS[d.weekday()]
     return {"tithi": TITHIS[ti % 15], "paksha": {"en": paksha[0], "hi": paksha[1]},
             "nakshatra": tr["Chandra"]["nakshatra"],
+            "nakshatraHi": NAK_HI.get(tr["Chandra"]["nakshatra"], tr["Chandra"]["nakshatra"]),
             "vara": {"en": v_en, "hi": v_hi, "lord": v_lord},
             "moonRashi": tr["Chandra"]["rashi"]}
 
@@ -797,6 +809,113 @@ def answer_question(qid, P, dasha, maha, ss, recs):
     return {"id": qid, "q": {"en": q["en"], "hi": q["hi"]},
             "lines": {"en": en, "hi": hi}}
 
+
+# 27 nakshatras: ruling graha and what the old texts say the person is like
+NAK_INFO = {
+"Ashwini":("Ketu","quick to start, quick to heal","शुरू करने और सँभलने में तेज़"),
+"Bharani":("Shukra","carries weight others put down","जो बोझ दूसरे छोड़ देते हैं, वह उठाते हैं"),
+"Krittika":("Surya","sharp, cuts through pretence","तेज़, दिखावा काट देते हैं"),
+"Rohini":("Chandra","draws people and comfort in","लोगों और आराम को खींचते हैं"),
+"Mrigashira":("Mangal","always searching for the next thing","हमेशा अगली चीज़ की खोज में"),
+"Ardra":("Rahu","storms first, clarity after","पहले तूफ़ान, फिर साफ़ाई"),
+"Punarvasu":("Guru","returns and rebuilds, again and again","बार-बार लौटकर फिर से बनाते हैं"),
+"Pushya":("Shani","feeds and protects others","दूसरों को पालते और बचाते हैं"),
+"Ashlesha":("Budh","reads people before they speak","बोलने से पहले लोगों को पढ़ लेते हैं"),
+"Magha":("Ketu","carries the family name","परिवार का नाम ढोते हैं"),
+"Purva Phalguni":("Shukra","made for rest and pleasure","आराम और सुख के लिए बने"),
+"Uttara Phalguni":("Surya","keeps the promise given","दिया हुआ वचन निभाते हैं"),
+"Hasta":("Chandra","builds with the hands","हाथों से बनाते हैं"),
+"Chitra":("Mangal","makes things beautiful","चीज़ों को सुंदर बनाते हैं"),
+"Swati":("Rahu","bends but does not break","झुकते हैं, टूटते नहीं"),
+"Vishakha":("Guru","fixed on one goal","एक लक्ष्य पर टिके"),
+"Anuradha":("Shani","keeps friendships alive","दोस्ती निभाते हैं"),
+"Jyeshtha":("Budh","takes charge, carries the cost","कमान लेते हैं, कीमत भी चुकाते हैं"),
+"Mula":("Ketu","digs down to the root","जड़ तक खोदते हैं"),
+"Purva Ashadha":("Shukra","cannot be talked out of it","बात से टाले नहीं जाते"),
+"Uttara Ashadha":("Surya","wins slowly and keeps it","धीरे जीतते हैं, टिकाए रखते हैं"),
+"Shravana":("Chandra","listens more than speaks","बोलने से ज़्यादा सुनते हैं"),
+"Dhanishta":("Mangal","keeps rhythm, gets things done","लय बनाए रखते हैं, काम करवा लेते हैं"),
+"Shatabhisha":("Rahu","heals, and keeps distance","चंगा करते हैं, दूरी भी रखते हैं"),
+"Purva Bhadrapada":("Guru","intense, sees the other side","गहरे, दूसरा पहलू देख लेते हैं"),
+"Uttara Bhadrapada":("Shani","calm on top, deep underneath","ऊपर से शांत, भीतर गहरे"),
+"Revati":("Budh","sees people safely across","लोगों को पार लगाते हैं"),
+}
+
+
+def nakshatra_card(P):
+    ch = P["Chandra"]
+    name = ch["nakshatra"]
+    lord, en, hi = NAK_INFO.get(name, ("Chandra", "", ""))
+    return {"name": name, "pada": ch["pada"], "lord": lord,
+            "lordHi": GRAHA_HI.get(lord, lord),
+            "en": f"Your Moon sits in {name}, pada {ch['pada']}. Its lord is "
+                  f"{GRAHA_EN.get(lord, lord)}. People born under it are said to be {en}.",
+            "nameHi": NAK_HI.get(name, name),
+            "hi": f"आपका चंद्रमा {NAK_HI.get(name, name)} नक्षत्र, {ch['pada']} पाद में है। इसका स्वामी "
+                  f"{GRAHA_HI.get(lord, lord)} है। इस नक्षत्र वालों के बारे में कहा जाता है — {hi}।"}
+
+
+def today_reading(P, tr, pan, ss):
+    """What today actually is for this chart. No fixed text."""
+    natal = P["Chandra"]["rashi"]
+    off = (tr["Chandra"]["rashi"] - natal) % 12
+    # the Moon's distance from your natal Moon is the oldest daily indicator
+    mood = {
+        0:  ("The Moon is back on your own Moon today. You will feel more like "
+             "yourself than usual — a good day to decide something.",
+             "आज चंद्रमा आपके अपने चंद्र पर है। आज आप ज़्यादा अपने जैसे महसूस करेंगे — "
+             "कुछ तय करने के लिए अच्छा दिन।"),
+        3:  ("The Moon sits fourth from yours — home pulls at you today. Small "
+             "domestic things will take more attention than they deserve.",
+             "चंद्रमा आपके चंद्र से चौथे है — आज घर खींचेगा। घर की छोटी बातें ज़रूरत "
+             "से ज़्यादा ध्यान माँगेंगी।"),
+        5:  ("The Moon is sixth from yours. Friction is likely — with people, with "
+             "paperwork, with the body. Nothing lasting; it moves in a day.",
+             "चंद्रमा आपके चंद्र से छठे है। आज रगड़ की संभावना है — लोगों से, कागज़ों "
+             "से, या शरीर से। टिकने वाली बात नहीं, एक दिन में बदल जाएगी।"),
+        7:  ("The Moon is eighth from yours — the day feels heavier than it is. "
+             "Postpone anything that can wait.",
+             "चंद्रमा आपके चंद्र से आठवें है — दिन असल से ज़्यादा भारी लगेगा। जो टल "
+             "सकता है, टाल दीजिए।"),
+        11: ("The Moon is twelfth from yours. Energy runs low and sleep matters "
+             "more today. Do less, and do it slowly.",
+             "चंद्रमा आपके चंद्र से बारहवें है। आज ऊर्जा कम रहेगी और नींद ज़्यादा "
+             "मायने रखेगी। कम कीजिए, और धीरे कीजिए।"),
+    }
+    if off in mood:
+        en, hi = mood[off]
+    elif off in (2, 6, 10):
+        en = ("The Moon is in a supportive spot from yours today — conversations "
+              "land better than usual. Use it for the call you have been avoiding.")
+        hi = ("आज चंद्रमा आपके चंद्र से अच्छी जगह पर है — बातचीत आम दिनों से बेहतर "
+              "बनेगी। जो बात टाल रहे थे, आज कर लीजिए।")
+    else:
+        en = ("The Moon is in a neutral position from yours today. An ordinary day "
+              "— which the old texts treat as the best kind.")
+        hi = ("आज चंद्रमा आपके चंद्र से सामान्य स्थिति में है। साधारण दिन — और "
+              "शास्त्र साधारण दिन को ही सबसे अच्छा मानते हैं।")
+
+    # today's weekday lord decides today's short practice
+    vara_lord = pan["vara"]["lord"]
+    practice = {"Mangal": "hanuman_chalisa", "Shani": "sunderkand",
+                "Guru": "vishnu_sahasranama", "Shukra": "lalita_sahasranama",
+                "Chandra": "lalita_sahasranama", "Surya": "vishnu_sahasranama",
+                "Budh": "chalisa_sangrah"}.get(vara_lord, "hanuman_chalisa")
+    pr = PRODUCTS[practice]
+
+    retro = [GRAHA_EN[k] for k, v in tr.items() if v["retro"] and k not in ("Rahu", "Ketu")]
+    retro_hi = [GRAHA_HI[k] for k, v in tr.items() if v["retro"] and k not in ("Rahu", "Ketu")]
+    if retro:
+        en += (f" {_join(retro, 'en')} " + ("is" if len(retro) == 1 else "are")
+               + " retrograde right now — expect old matters to come back for a second look.")
+        hi += (f" अभी {_join(retro_hi, 'hi')} वक्री " + ("है" if len(retro) == 1 else "हैं")
+               + " — पुरानी बातें दोबारा सामने आ सकती हैं।")
+
+    return {"en": en, "hi": hi,
+            "practice": {"key": practice, "handle": pr["handle"],
+                         "title": pr["title"], "vidhi": pr["vidhi"],
+                         "varaLord": vara_lord}}
+
 # ----------------------------------------------------------------- handler
 def build_response(body):
     for f in ("date", "lat", "lon"):
@@ -811,6 +930,7 @@ def build_response(body):
     recs, headline = recommend(chart)
     P = chart["planets"]
     tr = transits()
+    pan = panchang(tr)
     maha = current_dasha(chart["dasha"])
     anta, anta_seq = antardasha(maha) if maha else (None, [])
 
@@ -819,7 +939,9 @@ def build_response(body):
         "doshas": doshas(P),
         "antardasha": anta,
         "antardashaSeq": anta_seq[:9],
-        "panchang": panchang(tr),
+        "panchang": pan,
+        "nakshatraCard": nakshatra_card(P),
+        "today": today_reading(P, tr, pan, sade_sati(P["Chandra"]["rashi"], tr)),
         "transits": [{"key": k, "dev": v["dev"], "rashi": v["rashi"],
                       "retro": v["retro"], "lon": round(v["longitude"], 2)}
                      for k, v in tr.items()],

@@ -37,6 +37,28 @@ const DEMO = {
   ]
 };
 
+const QUESTIONS = [
+  {id:"job_change",      cat:"career", en:"Should I change my job or stay?",     hi:"नौकरी बदलूँ या टिका रहूँ?"},
+  {id:"business",        cat:"career", en:"Should I start something of my own?", hi:"अपना काम शुरू करूँ?"},
+  {id:"promotion",       cat:"career", en:"When will I move up at work?",        hi:"तरक्की कब मिलेगी?"},
+  {id:"stuck_work",      cat:"career", en:"Why does my work keep getting stuck?",hi:"काम अटकते क्यों हैं?"},
+  {id:"marriage_when",   cat:"vivah",  en:"When will I get married?",            hi:"शादी कब तक होगी?"},
+  {id:"love",            cat:"vivah",  en:"Will it be a love marriage?",         hi:"प्रेम विवाह होगा?"},
+  {id:"relation_tension",cat:"vivah",  en:"Why is there tension at home?",       hi:"रिश्ते में तनाव क्यों है?"},
+  {id:"children",        cat:"vivah",  en:"What does the chart say about children?", hi:"संतान का योग क्या है?"},
+  {id:"money_stay",      cat:"dhan",   en:"Why doesn't money stay with me?",     hi:"पैसा टिकता क्यों नहीं?"},
+  {id:"loan",            cat:"dhan",   en:"When will my debt clear?",            hi:"कर्ज़ कब उतरेगा?"},
+  {id:"property",        cat:"dhan",   en:"Is there a house or land in my chart?",hi:"घर या ज़मीन का योग है?"},
+  {id:"foreign",         cat:"dhan",   en:"Is there foreign travel or settlement?",hi:"विदेश जाने का योग है?"},
+  {id:"restless",        cat:"mann",   en:"Why does my mind stay restless?",     hi:"मन बेचैन क्यों रहता है?"},
+  {id:"sleep",           cat:"mann",   en:"Why can't I sleep properly?",         hi:"नींद ठीक से क्यों नहीं आती?"},
+  {id:"family",          cat:"mann",   en:"Why do family matters keep hurting?", hi:"घर की बातें क्यों चुभती हैं?"},
+  {id:"health",          cat:"sehat",  en:"Why does my health stay weak?",       hi:"सेहत कमज़ोर क्यों रहती है?"},
+  {id:"energy",          cat:"sehat",  en:"Why do I feel low on energy?",        hi:"थकान क्यों बनी रहती है?"},
+  {id:"sadesati",        cat:"other",  en:"Is Sade Sati running, and until when?",hi:"साढ़ेसाती चल रही है? कब तक?"},
+  {id:"paath",           cat:"other",  en:"Which paath is right for me?",        hi:"मेरे लिए कौन सा पाठ सही है?"}
+];
+
 let STATE = DEMO;
 let LANG  = "en";
 
@@ -88,7 +110,8 @@ async function fetchChart(birth){
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body: JSON.stringify({date:birth.date, time:birth.time, lat:birth.lat,
-                          lon:birth.lon, tz:birth.tz, concern:birth.concern})
+                          lon:birth.lon, tz:birth.tz, concern:birth.concern,
+                          question: birth.question || PICKED_Q || undefined})
   });
   const j = await r.json();
   if(!r.ok) throw new Error(j.error || "chart failed");
@@ -152,6 +175,9 @@ function renderAll(){
   renderPanchang();
   renderConcern();
   renderQuestions();
+  renderNakshatra();
+  renderToday();
+  renderYantra();
   if(window.onLangChange) window.onLangChange(LANG);
 }
 
@@ -454,8 +480,7 @@ function renderConcern(){
 function renderQuestions(){
   const host = document.getElementById("questions");
   if(!host) return;
-  const qs = STATE.questions || [];
-  if(!qs.length){ host.innerHTML = ""; return; }
+  const qs = QUESTIONS;
   const d = I18N[LANG];
 
   host.innerHTML = `<div class="qcols">` + CAT_ORDER.map(cat=>{
@@ -477,7 +502,11 @@ function renderQuestions(){
 
 async function askQuestion(qid){
   const birth = readBirth();
-  if(!birth) return;
+  if(!birth){
+    try{ sessionStorage.setItem("sa_pendingQ", qid); }catch(e){}
+    location.href = "index.html?lang=" + LANG + "#birth";
+    return;
+  }
   PICKED_Q = qid;
   const host = document.getElementById("answer");
   if(host) host.innerHTML = loaderHTML(I18N[LANG]["status.loading"]);
@@ -532,6 +561,72 @@ function loaderHTML(text){
   </span>`;
 }
 
+
+/* ---- Shri Yantra + Nakshatra (motion library) ---- */
+function yantraSVG(){
+  const up = [[110,34,44,168,176,168],[110,58,58,152,162,152],[110,80,70,140,150,140]];
+  const dn = [[110,186,44,52,176,52],[110,162,58,68,162,68],[110,140,70,80,150,80]];
+  const tri = a => `<polygon class="y-tri" points="${a[0]},${a[1]} ${a[2]},${a[3]} ${a[4]},${a[5]}"/>`;
+  let lotus = "";
+  for(let i=0;i<16;i++){
+    const a = i*22.5*Math.PI/180;
+    const x = 110+Math.cos(a)*96, y = 110+Math.sin(a)*96;
+    lotus += `<circle class="y-lotus" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9"/>`;
+  }
+  return `<svg class="yantra" viewBox="0 0 220 220" role="img" aria-hidden="true">
+    <g class="y-spin">${lotus}</g>
+    <rect class="y-frame" x="18" y="18" width="184" height="184"/>
+    <circle class="y-frame" cx="110" cy="110" r="82"/>
+    <g class="y-pulse">${up.map(tri).join("")}${dn.map(tri).join("")}</g>
+    <circle class="y-bindu" cx="110" cy="110" r="3.4"/>
+  </svg>`;
+}
+
+function renderYantra(){
+  const host = document.getElementById("yantra");
+  if(host) host.innerHTML = yantraSVG();
+}
+
+function renderNakshatra(){
+  const host = document.getElementById("nakshatra");
+  if(!host) return;
+  const n = STATE.nakshatraCard;
+  if(!n){ host.innerHTML = ""; return; }
+  const d = I18N[LANG];
+  const pts = [[20,26],[38,14],[56,30],[70,20],[46,48],[28,58],[58,64],[40,76]];
+  const stars = pts.map((p,i)=>
+    `<circle class="n-star n-twinkle" cx="${p[0]}" cy="${p[1]}" r="${1.6 + (i%3)*0.7}"
+       style="animation-delay:${(i*0.31).toFixed(2)}s"/>`).join("");
+  const links = pts.slice(1).map((p,i)=>
+    `<line class="n-link" x1="${pts[i][0]}" y1="${pts[i][1]}" x2="${p[0]}" y2="${p[1]}"/>`).join("");
+  const name = LANG === "hi" ? (n.nameHi || n.name) : n.name;
+  const lord = LANG === "hi" ? n.lordHi : n.lord;
+
+  host.innerHTML = `<div class="nak">
+    <svg viewBox="0 0 90 90" aria-hidden="true">${links}${stars}</svg>
+    <div>
+      <p class="meta">${d["nk.label"]} &middot; ${d["nk.pada"]} ${n.pada} &middot; ${lord}</p>
+      <h3>${name}</h3>
+      <p>${n[LANG]}</p>
+    </div></div>`;
+}
+
+function renderToday(){
+  const host = document.getElementById("todayBody");
+  if(!host || !STATE.today) return;
+  host.textContent = STATE.today[LANG];
+  const pr = STATE.today.practice, d = I18N[LANG];
+  const box = document.getElementById("todayPractice");
+  if(box && pr){
+    box.innerHTML = `
+      <div class="eyebrow">${d["t.do.eyebrow"]}</div>
+      <h2 class="display" style="margin:12px 0 14px">${pr.title[LANG]}</h2>
+      <div class="vidhi" style="margin-top:0"><span>${d["p.vidhi"]}</span>${pr.vidhi[LANG]}</div>
+      <a class="cta" style="margin-top:24px"
+         href="https://sanskritagain.com/products/${pr.handle}">${d["p.cta"]}</a>`;
+  }
+}
+
 /* =============================== boot =============================== */
 async function boot(){
   applyTheme(currentTheme());
@@ -561,6 +656,13 @@ async function boot(){
     }catch(e){}
     return;
   }                       // stay on the demo chart
+
+  let pending = "";
+  try{
+    pending = sessionStorage.getItem("sa_pendingQ") || "";
+    if(pending) sessionStorage.removeItem("sa_pendingQ");
+  }catch(e){}
+  if(pending){ PICKED_Q = pending; birth.question = pending; }
 
   const status = document.getElementById("status");
   if(status) status.innerHTML = loaderHTML(I18N[LANG]["status.loading"]);

@@ -49,13 +49,10 @@ en:{
   "p.note":"These are traditional suggestions drawn from classical texts. They are not a promise of any outcome, and they are not a substitute for medical, legal or financial advice.",
 
   /* ---- today ---- */
-  "t.eyebrow":"Today · 21 August",
-  "t.pull":"“The Moon is moving through Scorpio, which sits awkwardly against your own Moon — small things take more effort than they should.”",
-  "t.body":"Interactions feel pricklier than they actually are today. This is a transit, not a verdict: it passes in about two and a half days. If something can wait until Sunday, let it.",
+  "t.eyebrow":"Today",
+  "t.pull":"What today is, for your chart.",
   "t.transits":"Where the planets are now",
   "t.do.eyebrow":"Today's practice",
-  "t.do.h":"Hanuman Chalisa",
-  "t.do.p":"Five minutes. On a day when the Moon runs rough, the short daily recitation does more than the long one you'll abandon halfway.",
   "t.do.cta":"See the manuscript",
 
   /* ---- footer ---- */
@@ -70,6 +67,8 @@ en:{
   "q.h":"What do you want to know?",
   "q.lede":"Tap any question. The answer is worked out from your own chart, not a general reading.",
   "q.other":"Other",
+  "nk.eyebrow":"Your nakshatra",
+  "nk.label":"Nakshatra","nk.pada":"pada",
   "s.eyebrow":"Where you stand",
   "s.h":"Saturn, and what your chart is carrying.",
   "s.sadesati":"Sade Sati",
@@ -129,13 +128,10 @@ hi:{
   "home.form.geoerr":"स्थान नहीं मिला। राज्य या देश भी लिखें।",
   "p.note":"ये शास्त्रों पर आधारित पारंपरिक सुझाव हैं। किसी परिणाम की गारंटी नहीं है, और ये चिकित्सा, कानूनी या आर्थिक सलाह का विकल्प नहीं हैं।",
 
-  "t.eyebrow":"आज · 21 अगस्त",
-  "t.pull":"“चंद्रमा वृश्चिक से गुज़र रहा है, जो आपके अपने चंद्र के सामने कठिन स्थिति में है — छोटी बातों में आज ज़्यादा मेहनत लगेगी।”",
-  "t.body":"आज बातचीत जितनी कड़वी लगेगी, उतनी है नहीं। यह गोचर है, निर्णय नहीं — ढाई दिन में बदल जाएगा। जो काम रविवार तक रुक सकता है, उसे रुकने दें।",
+  "t.eyebrow":"आज",
+  "t.pull":"आज का दिन, आपकी कुंडली के हिसाब से।",
   "t.transits":"अभी ग्रह कहाँ हैं",
   "t.do.eyebrow":"आज का अभ्यास",
-  "t.do.h":"हनुमान चालीसा",
-  "t.do.p":"पाँच मिनट। जिस दिन चंद्रमा कठिन हो, उस दिन छोटा नित्य पाठ उस लंबे पाठ से अधिक काम आता है जिसे आप बीच में छोड़ देंगे।",
   "t.do.cta":"पांडुलिपि देखें",
 
   "theme.label":"थीम",
@@ -149,6 +145,8 @@ hi:{
   "q.h":"आप क्या जानना चाहते हैं?",
   "q.lede":"किसी भी सवाल पर दबाइए। जवाब आपकी अपनी कुंडली से निकलता है, कोई आम भविष्यवाणी नहीं।",
   "q.other":"अन्य",
+  "nk.eyebrow":"आपका नक्षत्र",
+  "nk.label":"नक्षत्र","nk.pada":"पाद",
   "s.eyebrow":"आपकी स्थिति",
   "s.h":"शनि, और कुंडली में क्या चल रहा है।",
   "s.sadesati":"साढ़ेसाती",
