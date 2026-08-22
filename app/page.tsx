@@ -1,5 +1,5 @@
-import VedPage from "./ved/page";
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
-  return <VedPage />;
+  redirect("/index.html");
 }

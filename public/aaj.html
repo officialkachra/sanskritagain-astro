@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" data-default-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Today — SanskritAgain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Spectral:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Tiro+Devanagari+Sanskrit&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header><div class="wrap bar">
+  <a class="mark" href="index.html" data-keeplang>Sanskrit<em>Again</em></a>
+  <nav>
+    <a href="kundli.html" data-i18n="nav.kundli">Chart</a>
+    <a href="aaj.html"    aria-current="page" data-i18n="nav.aaj">Today</a>
+    <a href="paath.html"  data-i18n="nav.paath">Recitations</a>
+  </nav>
+  <button class="themetog" id="themeBtn" aria-label="Toggle theme">◑</button>
+  <div class="langtog" role="group" aria-label="Language">
+    <button data-lang="en" aria-pressed="true">EN</button>
+    <button data-lang="hi" aria-pressed="false">हिं</button>
+  </div>
+</div></header>
+
+<main class="wrap">
+
+  <section class="hero split" style="gap:56px;align-items:start">
+    <div>
+      <div class="eyebrow" data-i18n="t.eyebrow">Today · 21 August</div>
+      <p class="pull" style="margin-top:20px" data-i18n="t.pull"></p>
+      <p class="lede" style="margin-top:26px" data-i18n="t.body"></p>
+    </div>
+
+    <div>
+      <div class="eyebrow dim" data-i18n="t.transits">Where the planets are now</div>
+      <div id="transits" style="margin-top:18px"></div>
+      <dl class="panchang" id="panchang" style="grid-template-columns:repeat(2,1fr)"></dl>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="split" style="align-items:center">
+      <div>
+        <div class="eyebrow" data-i18n="t.do.eyebrow">Today's practice</div>
+        <h2 class="display" style="margin:12px 0 14px" data-i18n="t.do.h">Hanuman Chalisa</h2>
+        <p class="lede" data-i18n="t.do.p">Five minutes.</p>
+        <a class="cta" style="margin-top:24px"
+           href="https://sanskritagain.com/products/hanuman-chalisa"
+           data-i18n="t.do.cta">See the manuscript</a>
+      </div>
+      <div class="leaf-panel" style="text-align:center;padding:46px 30px">
+        <p class="leaf-cap">आज का पाठ</p>
+        <p class="dev" style="font-size:30px;line-height:1.6;margin:0;color:#1A1710">
+          श्रीगुरु चरन सरोज रज<br>निज मनु मुकुरु सुधारि
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p style="margin:0" data-i18n="f.method">Charts use the Lahiri ayanamsa.</p>
+  <p style="margin:6px 0 0" data-i18n="f.disc">Traditional suggestions only.</p>
+  <p style="margin:16px 0 0"><a href="https://sanskritagain.com" data-i18n="f.shop">Back to SanskritAgain</a></p>
+</footer>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
+<script>
+/* today's transits — feed this from the same ephemeris the chart uses */
+const FALLBACK = [
+  {dev:"चं", key:"Chandra", rashi:7,  retro:false},
+  {dev:"सू", key:"Surya",   rashi:4,  retro:false},
+  {dev:"श",  key:"Shani",   rashi:11, retro:false},
+  {dev:"गु", key:"Guru",    rashi:2,  retro:false}
+];
+window.onLangChange = function(lang){
+  const rows = (STATE.transits && STATE.transits.length) ? STATE.transits : FALLBACK;
+  const retro = lang === "hi" ? "वक्री" : "R";
+  document.getElementById("transits").innerHTML = rows.map(t=>`
+    <div class="transit">
+      <span class="g">${t.dev}</span>
+      <span class="t">${PLANET_TEXT[lang][t.key][0]}${
+        t.retro ? ` <span style="color:var(--sindoor);font-size:11px">${retro}</span>` : ""}</span>
+      <span class="s">${RASHI_TEXT[lang][t.rashi]}</span>
+    </div>`).join("");
+};
+</script>
+</body>
+</html>

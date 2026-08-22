@@ -1,0 +1,353 @@
+/* ============================================================
+   SanskritAgain · Kundli — design tokens
+   ink page, palm-leaf panels, gold leaf accent, sindoor alerts
+   ============================================================ */
+:root, [data-theme="dark"]{
+  --ink:#0D0E0C; --ink-2:#161714; --ink-3:#1E1F1B;
+  --leaf:#E9DFC7; --leaf-2:#DCCFAF; --leaf-3:#CBBB94;
+  --gold:#C9A227; --gold-hi:#DCB63A;
+  --sindoor:#B8410E;
+  --quiet:#7A786E;
+  --hair:rgba(233,223,199,.14);
+  --accent:#9AA9D6;
+  --panel-a:#E9DFC7; --panel-b:#DCCFAF; --panel-ink:#1A1710; --panel-cap:#6E6247;
+  --star:rgba(255,255,255,.34); --star-gold:rgba(201,162,39,.4);
+  --halo:rgba(58,44,120,.34);
+  --maxw:1080px;
+}
+/* light: aged paper, iron-gall ink — the manuscript itself rather than the sky */
+[data-theme="light"]{
+  --ink:#F4EDDD; --ink-2:#EDE3CE; --ink-3:#E4D8BE;
+  --leaf:#2A2418; --leaf-2:#3A3223; --leaf-3:#554A33;
+  --gold:#9A7714; --gold-hi:#7E610F;
+  --sindoor:#A8390B;
+  --quiet:#6E6247;
+  --hair:rgba(42,36,24,.16);
+  --accent:#48548A;
+  --panel-a:#FBF6EA; --panel-b:#F2E9D5; --panel-ink:#1A1710; --panel-cap:#8A7C58;
+  --star:rgba(42,36,24,.12); --star-gold:rgba(154,119,20,.2);
+  --halo:rgba(154,119,20,.08);
+}
+html{color-scheme:dark}
+[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--ink); color:var(--leaf);
+  font-family:'Spectral',Georgia,serif; font-weight:300;
+  font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+body[data-lang="hi"]{font-family:'Tiro Devanagari Hindi','Spectral',serif;line-height:1.85}
+body[data-lang="hi"] .display{font-family:'Tiro Devanagari Hindi',serif;font-weight:400}
+img{max-width:100%}
+a{color:inherit}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+.display,h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:300;margin:0}
+h1{font-size:clamp(36px,6.6vw,64px);line-height:1.04;letter-spacing:-.01em}
+h2{font-size:clamp(25px,4vw,36px);line-height:1.18}
+h3{font-size:clamp(21px,2.6vw,28px);font-weight:400;line-height:1.25}
+.italic{font-style:italic;color:var(--accent)}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--gold);
+}
+.eyebrow.dim{color:var(--quiet)}
+.lede{max-width:48ch;color:var(--quiet);font-size:17px}
+.dev{font-family:'Tiro Devanagari Sanskrit',serif}
+
+/* ---------------- header ---------------- */
+header{border-bottom:1px solid var(--hair);position:sticky;top:0;background:color-mix(in srgb, var(--ink) 94%, transparent);backdrop-filter:blur(8px);z-index:20}
+.bar{display:flex;align-items:center;gap:28px;padding:16px 0}
+.mark{font-family:'Cormorant Garamond',serif;font-size:21px;letter-spacing:.05em;text-decoration:none;white-space:nowrap}
+.mark em{font-style:normal;color:var(--gold)}
+nav{display:flex;gap:22px;margin-left:auto}
+nav a{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--quiet);text-decoration:none;padding:4px 0;
+  border-bottom:1px solid transparent;transition:color .18s,border-color .18s;
+}
+nav a:hover{color:var(--leaf)}
+nav a[aria-current="page"]{color:var(--leaf);border-bottom-color:var(--gold)}
+.langtog{display:flex;border:1px solid var(--hair);border-radius:2px;overflow:hidden}
+.langtog button{
+  background:transparent;border:0;cursor:pointer;color:var(--quiet);
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;
+  padding:7px 11px;transition:background .18s,color .18s;
+}
+.langtog button[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+.langtog button:focus-visible,nav a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+/* ---------------- sections ---------------- */
+.hero{padding:72px 0 52px}
+.hero h1{margin:14px 0 0}
+.hero .lede{margin-top:22px}
+.section{border-top:1px solid var(--hair);padding:60px 0}
+.section-head{margin-bottom:30px}
+.section-head h2{margin-top:12px}
+
+/* ---------------- palm-leaf panel (signature) ---------------- */
+.leaf-panel{
+  background:linear-gradient(168deg,var(--panel-a) 0%,var(--panel-b) 100%);
+  color:var(--panel-ink);border-radius:2px;padding:30px;position:relative;
+  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 24px 60px -30px #000;
+}
+.leaf-panel::after{content:"";position:absolute;left:50%;top:12px;width:7px;height:7px;
+  border-radius:50%;background:var(--panel-ink);opacity:.26;transform:translateX(-50%)}
+.leaf-cap{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--panel-cap);text-align:center;margin:0 0 18px}
+
+/* ---------------- kundli ---------------- */
+.kundli{width:100%;height:auto;display:block}
+.k-frame{stroke:var(--panel-ink);stroke-width:2;fill:none}
+.k-line{stroke:var(--panel-ink);stroke-width:1.1;fill:none}
+.k-rashi{font-family:'IBM Plex Mono',monospace;font-size:11px;fill:var(--panel-cap)}
+.k-graha{font-family:'Tiro Devanagari Sanskrit',serif;font-size:19px;fill:var(--panel-ink);cursor:default}
+.k-retro{fill:var(--sindoor)}
+.k-lagna{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--sindoor);letter-spacing:.1em}
+
+/* ---------------- grid helpers ---------------- */
+.split{display:grid;grid-template-columns:1.05fr 1fr;gap:52px;align-items:start}
+.cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+
+/* ---------------- lens tabs ---------------- */
+.lens{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.lens button{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;background:transparent;color:var(--quiet);
+  border:1px solid var(--hair);border-radius:2px;padding:8px 15px;cursor:pointer;
+  transition:color .18s,border-color .18s;
+}
+.lens button[aria-pressed="true"]{color:var(--leaf);border-color:var(--gold)}
+.lens button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.lens-note{color:var(--quiet);font-size:15px;min-height:5.5em;max-width:44ch;margin:0}
+
+/* ---------------- planets table ---------------- */
+.prow{display:grid;grid-template-columns:1fr auto auto;gap:18px;align-items:baseline;
+  padding:17px 0;border-bottom:1px solid var(--hair)}
+.pname{font-family:'Cormorant Garamond',serif;font-size:23px;line-height:1.2}
+body[data-lang="hi"] .pname{font-family:'Tiro Devanagari Hindi',serif;font-size:20px}
+.pname .r{color:var(--sindoor);font-family:'IBM Plex Mono',monospace;font-size:10px;
+  vertical-align:super;margin-left:5px}
+.pdesc{color:var(--quiet);font-size:14px;line-height:1.55;margin-top:4px;max-width:54ch}
+.prashi{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.04em}
+.phouse{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--quiet);
+  min-width:34px;text-align:right}
+
+/* ---------------- recommendation ---------------- */
+.rec{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:start;
+  padding:38px 0;border-bottom:1px solid var(--hair)}
+.rec-rank{font-family:'Cormorant Garamond',serif;font-size:54px;color:var(--gold);
+  line-height:.8;font-weight:300}
+.why{margin:16px 0 0;padding:0;list-style:none}
+.why li{position:relative;padding-left:20px;margin-bottom:10px;opacity:.9}
+.why li::before{content:"—";position:absolute;left:0;color:var(--gold)}
+.vidhi{margin-top:22px;padding:18px 20px;border-left:2px solid var(--gold);
+  background:rgba(201,162,39,.05);font-size:15px;opacity:.92}
+.vidhi > span:first-child{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:7px}
+
+/* ---------------- buttons ---------------- */
+.cta,.btn{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;
+  letter-spacing:.14em;text-transform:uppercase;text-decoration:none;
+  padding:14px 28px;border-radius:2px;border:0;cursor:pointer}
+.cta{color:var(--ink);background:var(--gold)}
+.cta:hover{background:var(--gold-hi)}
+.btn{color:var(--leaf);background:transparent;border:1px solid var(--hair)}
+.btn:hover{border-color:var(--gold)}
+.cta:focus-visible,.btn:focus-visible{outline:2px solid var(--leaf);outline-offset:3px}
+
+/* ---------------- form ---------------- */
+.form{display:grid;gap:18px;max-width:440px}
+.field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:7px}
+.field input{width:100%;background:var(--ink-2);border:1px solid var(--hair);
+  border-radius:2px;color:var(--leaf);padding:13px 14px;font-family:'IBM Plex Mono',monospace;
+  font-size:14px}
+.field input:focus{outline:2px solid var(--gold);outline-offset:0;border-color:transparent}
+.field .hint{color:var(--quiet);font-size:13px;margin-top:6px}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ---------------- cards ---------------- */
+.card{background:var(--ink-2);border:1px solid var(--hair);border-radius:2px;padding:26px}
+.card h3{margin-bottom:8px}
+.card p{color:var(--quiet);font-size:15px;margin:0}
+
+/* ---------------- today ---------------- */
+.pull{font-family:'Cormorant Garamond',serif;font-weight:300;
+  font-size:clamp(30px,5.2vw,52px);line-height:1.12;color:var(--accent);margin:0}
+body[data-lang="hi"] .pull{font-family:'Tiro Devanagari Hindi',serif;font-size:clamp(24px,4vw,40px);line-height:1.5}
+.transit{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:baseline;
+  padding:15px 0;border-bottom:1px solid var(--hair)}
+.transit .g{font-family:'Tiro Devanagari Sanskrit',serif;font-size:20px;color:var(--gold)}
+.transit .t{font-size:15px}
+.transit .s{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--quiet)}
+
+footer{border-top:1px solid var(--hair);padding:34px 0 64px;color:var(--quiet);font-size:13px}
+footer a{color:var(--quiet)}
+
+/* ---------------- responsive ---------------- */
+@media (max-width:860px){
+  .split,.cols-3{grid-template-columns:1fr;gap:32px}
+  .rec{grid-template-columns:1fr;gap:12px}
+  .rec-rank{font-size:40px}
+  .prow{grid-template-columns:1fr auto;gap:10px}
+  .phouse{display:none}
+  .bar{flex-wrap:wrap;gap:14px}
+  nav{margin-left:0;order:3;width:100%;gap:18px;overflow-x:auto}
+  .langtog{margin-left:auto}
+  .hero{padding:48px 0 36px}
+  .section{padding:44px 0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto}}
+
+/* ---------------- orbital chakra ---------------- */
+.chakra-wrap{position:relative;width:100%;max-width:520px;margin:0 auto;aspect-ratio:1}
+.chakra{width:100%;height:100%;display:block;overflow:visible}
+.ck-ring{fill:none;stroke:var(--hair)}
+.ck-ring-gold{fill:none;stroke:rgba(201,162,39,.34)}
+.ck-spoke{stroke:rgba(233,223,199,.09);stroke-width:1}
+.ck-rashi{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.14em;
+  fill:var(--quiet);text-transform:uppercase}
+.ck-orbit{fill:none;stroke:rgba(233,223,199,.07)}
+.ck-body{fill:var(--ink-2);stroke:var(--gold)}
+.ck-body.retro{stroke:var(--sindoor)}
+.ck-glyph{font-family:'Tiro Devanagari Sanskrit',serif;font-size:14px;fill:var(--leaf);
+  text-anchor:middle;dominant-baseline:central}
+.ck-glyph.retro{fill:var(--sindoor)}
+.ck-lagna{stroke:var(--sindoor);stroke-width:1.4}
+.ck-lagna-cap{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.16em;
+  fill:var(--sindoor);text-anchor:middle}
+.ck-core{font-family:'Cormorant Garamond',serif;font-size:15px;fill:var(--quiet);
+  text-anchor:middle;letter-spacing:.05em}
+.ck-core-big{font-family:'Cormorant Garamond',serif;font-size:30px;fill:var(--leaf);
+  text-anchor:middle}
+
+.ck-spin{transform-origin:50% 50%;animation:ck-rot 240s linear infinite}
+.ck-spin-back{transform-origin:50% 50%;animation:ck-rot-r 240s linear infinite}
+.ck-breathe{animation:ck-breathe 7s ease-in-out infinite}
+@keyframes ck-rot   {to{transform:rotate(360deg)}}
+@keyframes ck-rot-r {to{transform:rotate(-360deg)}}
+@keyframes ck-breathe{0%,100%{opacity:.5}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  .ck-spin,.ck-spin-back,.ck-breathe{animation:none}
+}
+
+/* ============ motion library ============ */
+@keyframes om-draw    { from{stroke-dashoffset:1} to{stroke-dashoffset:0} }
+@keyframes om-fade    { 0%,12%{opacity:0} 40%,100%{opacity:1} }
+@keyframes om-pulse   { 0%,100%{opacity:.25;transform:scale(.86)} 50%{opacity:1;transform:scale(1.1)} }
+@keyframes om-breathe { 0%,100%{transform:scale(.94)} 50%{transform:scale(1.04)} }
+@keyframes om-twinkle { 0%,100%{opacity:.18} 50%{opacity:1} }
+
+/* night sky behind everything — fades out in light mode via --star tokens */
+body{
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, var(--star), transparent),
+    radial-gradient(1.4px 1.4px at 47% 12%, var(--star-gold), transparent),
+    radial-gradient(1px 1px at 63% 44%, var(--star), transparent),
+    radial-gradient(1px 1px at 79% 76%, var(--star), transparent),
+    radial-gradient(1.3px 1.3px at 88% 24%, var(--star-gold), transparent),
+    radial-gradient(1px 1px at 36% 88%, var(--star), transparent),
+    radial-gradient(900px 620px at 50% -10%, var(--halo), transparent);
+  background-attachment:fixed;
+}
+
+/* kundli draws itself in, then the grahas settle */
+.k-draw{stroke-dasharray:1;stroke-dashoffset:1;animation:om-draw 2.6s ease-out forwards}
+.k-graha{opacity:0;animation:om-fade 1.4s ease-out forwards}
+
+/* theme toggle */
+.themetog{background:transparent;border:1px solid var(--hair);border-radius:2px;
+  color:var(--quiet);cursor:pointer;padding:7px 10px;line-height:1;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;transition:color .18s,border-color .18s}
+.themetog:hover{color:var(--leaf);border-color:var(--gold)}
+.themetog:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+/* status strip — sade sati, doshas */
+.flag{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;
+  padding:24px 0;border-bottom:1px solid var(--hair)}
+.flag-mark{width:44px;height:44px}
+.flag h3{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:22px;margin:0 0 6px}
+body[data-lang="hi"] .flag h3{font-family:'Tiro Devanagari Hindi',serif;font-size:19px}
+.flag p{margin:0;color:var(--quiet);font-size:15px;max-width:60ch}
+.flag.calm h3{color:var(--quiet)}
+
+/* dasha timeline */
+.dasha{display:grid;gap:2px;margin-top:22px}
+.dbar{display:grid;grid-template-columns:92px 1fr auto;gap:16px;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--hair);font-size:14px}
+.dbar .lord{font-family:'Cormorant Garamond',serif;font-size:19px}
+body[data-lang="hi"] .dbar .lord{font-family:'Tiro Devanagari Hindi',serif;font-size:16px}
+.dbar .track{height:3px;background:var(--hair);border-radius:2px;position:relative}
+.dbar .fill{position:absolute;inset:0;background:var(--gold);border-radius:2px;transform-origin:left}
+.dbar .yrs{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--quiet)}
+.dbar.now{color:var(--leaf)}
+.dbar.now .lord{color:var(--gold)}
+
+/* panchang strip */
+.panchang{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--hair);
+  border:1px solid var(--hair);border-radius:2px;overflow:hidden;margin-top:26px}
+.pcell{background:var(--ink);padding:18px 16px}
+.pcell dt{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gold);margin:0 0 7px}
+.pcell dd{margin:0;font-family:'Cormorant Garamond',serif;font-size:21px}
+body[data-lang="hi"] .pcell dd{font-family:'Tiro Devanagari Hindi',serif;font-size:17px}
+
+/* concern chips */
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;background:transparent;color:var(--quiet);
+  border:1px solid var(--hair);border-radius:2px;padding:9px 14px;cursor:pointer;
+  transition:color .18s,border-color .18s}
+body[data-lang="hi"] .chip{font-family:'Tiro Devanagari Hindi',serif;font-size:13px;
+  letter-spacing:0;text-transform:none}
+.chip[aria-pressed="true"]{color:var(--ink);background:var(--gold);border-color:var(--gold)}
+[data-theme="light"] .chip[aria-pressed="true"]{color:#FBF6EA}
+.chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* answer block — the reading for their concern */
+.answer{border-left:2px solid var(--gold);padding:4px 0 4px 24px;margin-top:26px}
+.answer li{list-style:none;margin:0 0 14px;font-size:17px;line-height:1.7;max-width:56ch}
+.answer ul{margin:0;padding:0}
+
+@media (max-width:860px){
+  .panchang{grid-template-columns:repeat(2,1fr)}
+  .dbar{grid-template-columns:72px 1fr;gap:10px}
+  .dbar .yrs{display:none}
+  .flag{grid-template-columns:1fr;gap:10px}
+}
+@media (prefers-reduced-motion:reduce){
+  .k-draw,.k-graha{animation:none;stroke-dashoffset:0;opacity:1}
+}
+
+/* Dharma Chakra loader — from the motion library */
+.loader{display:flex;align-items:center;gap:14px;padding:8px 0}
+.loader svg{width:44px;height:44px;flex:none}
+.loader .wheel{transform-box:view-box;transform-origin:30px 30px;
+  animation:om-spin 6s linear infinite}
+.loader .arc{transform-box:view-box;transform-origin:30px 30px;
+  animation:om-draw 2.2s ease-in-out infinite alternate, om-spin 4s linear infinite}
+.loader span{color:var(--quiet);font-size:15px}
+@keyframes om-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.loader .wheel,.loader .arc{animation:none}}
+
+/* ---------------- question list ---------------- */
+.qgroup{margin-bottom:30px}
+.qcat{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold);margin:0 0 10px}
+body[data-lang="hi"] .qcat{font-family:'Tiro Devanagari Hindi',serif;font-size:12px;
+  letter-spacing:.05em;text-transform:none}
+.qlist{display:grid;gap:1px}
+.qrow{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;
+  width:100%;text-align:left;background:transparent;border:0;cursor:pointer;
+  border-bottom:1px solid var(--hair);color:var(--leaf);
+  font-family:inherit;font-size:16px;padding:14px 2px;transition:color .18s}
+body[data-lang="hi"] .qrow{font-size:17px;line-height:1.7}
+.qrow:hover{color:var(--gold)}
+.qrow .go{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--quiet)}
+.qrow:hover .go{color:var(--gold)}
+.qrow[aria-pressed="true"]{color:var(--gold)}
+.qrow:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.qcols{display:grid;grid-template-columns:1fr 1fr;gap:0 44px}
+@media (max-width:860px){.qcols{grid-template-columns:1fr}}

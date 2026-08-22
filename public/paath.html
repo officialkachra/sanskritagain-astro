@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" data-default-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which paath — SanskritAgain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Spectral:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Tiro+Devanagari+Sanskrit&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header><div class="wrap bar">
+  <a class="mark" href="index.html" data-keeplang>Sanskrit<em>Again</em></a>
+  <nav>
+    <a href="kundli.html" data-i18n="nav.kundli">Chart</a>
+    <a href="aaj.html"    data-i18n="nav.aaj">Today</a>
+    <a href="paath.html"  aria-current="page" data-i18n="nav.paath">Recitations</a>
+  </nav>
+  <button class="themetog" id="themeBtn" aria-label="Toggle theme">◑</button>
+  <div class="langtog" role="group" aria-label="Language">
+    <button data-lang="en" aria-pressed="true">EN</button>
+    <button data-lang="hi" aria-pressed="false">हिं</button>
+  </div>
+</div></header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <div class="eyebrow" data-i18n="p.eyebrow">For you</div>
+    <h1 class="display">
+      <span data-i18n="p.h1a">Which paath,</span>
+      <i class="italic" data-i18n="p.h1b">and why.</i>
+    </h1>
+    <p class="lede" data-i18n="p.lede">Two suggestions from your chart.</p>
+  </section>
+
+  <!-- ---------------- first recommendation ---------------- -->
+  <p id="status" class="lede" style="margin:0 0 8px"></p>
+  <div id="recs"></div>
+
+  <section class="section" style="border-top:0;padding-top:34px">
+    <p class="lede" style="max-width:62ch;font-size:14px" data-i18n="p.note">
+      These are traditional suggestions drawn from classical texts.
+    </p>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p style="margin:0" data-i18n="f.method">Charts use the Lahiri ayanamsa.</p>
+  <p style="margin:6px 0 0" data-i18n="f.disc">Traditional suggestions only.</p>
+  <p style="margin:16px 0 0"><a href="https://sanskritagain.com" data-i18n="f.shop">Back to SanskritAgain</a></p>
+</footer>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-default-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kundli — SanskritAgain</title>
+<meta name="description" content="Your birth chart, read in plain language, with the recitation that suits it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Spectral:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Tiro+Devanagari+Sanskrit&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header><div class="wrap bar">
+  <a class="mark" href="index.html" data-keeplang>Sanskrit<em>Again</em></a>
+  <nav>
+    <a href="kundli.html" data-i18n="nav.kundli">Chart</a>
+    <a href="aaj.html"    data-i18n="nav.aaj">Today</a>
+    <a href="paath.html"  data-i18n="nav.paath">Recitations</a>
+  </nav>
+  <button class="themetog" id="themeBtn" aria-label="Toggle theme">◑</button>
+  <div class="langtog" role="group" aria-label="Language">
+    <button data-lang="en" aria-pressed="true">EN</button>
+    <button data-lang="hi" aria-pressed="false">हिं</button>
+  </div>
+</div></header>
+
+<main class="wrap">
+
+  <section class="hero split" style="align-items:center;gap:64px">
+    <div>
+      <div class="eyebrow" data-i18n="home.eyebrow">Your chart, read plainly</div>
+      <h1 class="display">
+        <span data-i18n="home.h1a">The planets you were</span><br>
+        <span data-i18n="home.h1b">born under,</span><br>
+        <i class="italic" data-i18n="home.h1c">and what to recite.</i>
+      </h1>
+      <p class="lede" data-i18n="home.lede">Enter your birth details.</p>
+    </div>
+
+    <div class="leaf-panel" style="padding:34px 30px">
+      <p class="leaf-cap">जन्म विवरण · Birth details</p>
+      <div class="form" style="max-width:none">
+        <div class="field">
+          <label for="f-name" data-i18n="home.form.name">Name</label>
+          <input id="f-name" type="text" autocomplete="name">
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="f-date" data-i18n="home.form.date">Date of birth</label>
+            <input id="f-date" type="date">
+          </div>
+          <div class="field">
+            <label for="f-time" data-i18n="home.form.time">Time of birth</label>
+            <input id="f-time" type="time">
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-place" data-i18n="home.form.place">Place of birth</label>
+          <input id="f-place" type="text" placeholder="Jaipur, Rajasthan">
+          <p class="hint" data-i18n="home.form.hint">Exact time matters.</p>
+        </div>
+        <div class="field">
+          <label data-i18n="c.h">What brought you here?</label>
+          <div class="chips" id="concernChips" role="group">
+            <button class="chip" data-concern="career" aria-pressed="false" data-i18n="c.career">Work</button>
+            <button class="chip" data-concern="vivah"  aria-pressed="false" data-i18n="c.vivah">Marriage</button>
+            <button class="chip" data-concern="dhan"   aria-pressed="false" data-i18n="c.dhan">Money</button>
+            <button class="chip" data-concern="mann"   aria-pressed="false" data-i18n="c.mann">Peace of mind</button>
+            <button class="chip" data-concern="sehat"  aria-pressed="false" data-i18n="c.sehat">Health</button>
+          </div>
+        </div>
+        <button class="cta" id="f-go" style="width:100%"
+           data-i18n="home.form.submit">Build my chart</button>
+        <p class="hint" id="f-status" style="margin:0;min-height:1.4em"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="chakra-wrap" style="max-width:440px;margin-bottom:44px">
+      <svg id="chakra" class="chakra" viewBox="0 0 520 520" role="img"
+           aria-label="Zodiac wheel"></svg>
+    </div>
+    <div class="eyebrow" data-i18n="pa.eyebrow">Panchang</div>
+    <h2 class="display" style="margin:12px 0 0" data-i18n="pa.h">Today, by the old reckoning.</h2>
+    <dl class="panchang" id="panchang" style="margin-bottom:52px"></dl>
+
+    <div class="section-head">
+      <div class="eyebrow" data-i18n="home.step.eyebrow">What you get</div>
+    </div>
+    <div class="cols-3">
+      <div class="card">
+        <h3 class="display" data-i18n="home.step1.h">Your kundli</h3>
+        <p data-i18n="home.step1.p">North Indian chart, all nine grahas.</p>
+      </div>
+      <div class="card">
+        <h3 class="display" data-i18n="home.step2.h">Plain-language reading</h3>
+        <p data-i18n="home.step2.p">Each planet explained in a sentence.</p>
+      </div>
+      <div class="card">
+        <h3 class="display" data-i18n="home.step3.h">Which paath, and why</h3>
+        <p data-i18n="home.step3.p">Every recitation names its basis.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p style="margin:0" data-i18n="f.method">Charts use the Lahiri ayanamsa.</p>
+  <p style="margin:6px 0 0" data-i18n="f.disc">Traditional suggestions only.</p>
+  <p style="margin:16px 0 0"><a href="https://sanskritagain.com" data-i18n="f.shop">Back to SanskritAgain</a></p>
+</footer>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
+<script>
+let concern = "";
+document.querySelectorAll("#concernChips .chip").forEach(b=>
+  b.addEventListener("click", ()=>{
+    concern = (concern === b.dataset.concern) ? "" : b.dataset.concern;
+    document.querySelectorAll("#concernChips .chip").forEach(x=>
+      x.setAttribute("aria-pressed", String(x.dataset.concern === concern)));
+  }));
+
+document.getElementById("f-go").addEventListener("click", async ()=>{
+  const d  = document.getElementById("f-date").value;
+  const t  = document.getElementById("f-time").value;
+  const pl = document.getElementById("f-place").value.trim();
+  const st = document.getElementById("f-status");
+  const dict = I18N[document.body.dataset.lang];
+
+  if(!d || !pl){ st.textContent = dict["home.form.hint"]; return; }
+
+  st.textContent = dict["home.form.geo"];
+  try{
+    const g  = await geocode(pl);
+    const tz = tzOffsetHours(g.tzName, d, t);
+    saveBirth({name:document.getElementById("f-name").value.trim(),
+               date:d, time:t, lat:g.lat, lon:g.lon, tz, place:g.label, concern});
+    const lang = document.body.dataset.lang;
+    location.href = "kundli.html?lang=" + lang;
+  }catch(e){
+    st.textContent = dict["home.form.geoerr"];
+  }
+});
+</script>
+</body>
+</html>

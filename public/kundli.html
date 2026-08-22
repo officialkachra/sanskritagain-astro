@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" data-default-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your chart — SanskritAgain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Spectral:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Tiro+Devanagari+Sanskrit&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header><div class="wrap bar">
+  <a class="mark" href="index.html" data-keeplang>Sanskrit<em>Again</em></a>
+  <nav>
+    <a href="kundli.html" aria-current="page" data-i18n="nav.kundli">Chart</a>
+    <a href="aaj.html"    data-i18n="nav.aaj">Today</a>
+    <a href="paath.html"  data-i18n="nav.paath">Recitations</a>
+  </nav>
+  <button class="themetog" id="themeBtn" aria-label="Toggle theme">◑</button>
+  <div class="langtog" role="group" aria-label="Language">
+    <button data-lang="en" aria-pressed="true">EN</button>
+    <button data-lang="hi" aria-pressed="false">हिं</button>
+  </div>
+</div></header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <div class="eyebrow" id="chartEyebrow">Kanya lagna · Dhanishta</div>
+    <h1 class="display">
+      <span id="headA">Saturn sits in your</span><br>
+      <i class="italic" id="headB">seventh house.</i>
+    </h1>
+    <p id="status" class="lede" style="margin:0"></p>
+    <p class="lede" data-i18n="k.lede">That single placement decides your recitation.</p>
+  </section>
+
+  <section id="answerBlock" class="section" style="border-top:0;padding-top:0">
+    <div class="eyebrow" data-i18n="a.eyebrow">Your answer</div>
+    <h2 class="display" style="margin:12px 0 0">
+      <span data-i18n="a.h">What the chart says about</span><span id="answerDash"> —</span>
+      <i class="italic" id="answerTopic"></i>
+    </h2>
+    <div class="answer" id="answer"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow" data-i18n="q.eyebrow">Ask the chart</div>
+      <h2 class="display" data-i18n="q.h">What do you want to know?</h2>
+      <p class="lede" style="margin-top:14px" data-i18n="q.lede"></p>
+    </div>
+    <div id="questions"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow" data-i18n="s.eyebrow">Where you stand</div>
+      <h2 class="display" data-i18n="s.h">Saturn, and what your chart is carrying.</h2>
+    </div>
+    <div id="status-flags"></div>
+  </section>
+
+  <section style="padding-bottom:20px">
+    <div class="chakra-wrap">
+      <svg id="chakra" class="chakra" viewBox="0 0 520 520" role="img"
+           aria-label="Zodiac wheel showing each planet at its position"></svg>
+    </div>
+  </section>
+
+  <section class="split" style="padding-bottom:56px">
+    <div class="leaf-panel">
+      <p class="leaf-cap" data-i18n="k.panel">Janma Kundli · Lagna Chart</p>
+      <svg class="kundli" viewBox="-6 -6 412 412" role="img" aria-label="North Indian birth chart">
+        <g id="k-frame" fill="none" stroke="var(--panel-ink)" stroke-width="1.1" stroke-linejoin="round">
+          <rect x="0" y="0" width="400" height="400" stroke-width="2"/>
+          <path d="M0 0 L400 400"/><path d="M400 0 L0 400"/>
+          <path d="M200 0 L400 200 L200 400 L0 200 Z"/>
+        </g>
+        <g id="k-cells"></g>
+      </svg>
+    </div>
+
+    <div>
+      <div class="eyebrow" data-i18n="k.lens.eyebrow">Precise chart</div>
+      <h2 class="display" style="margin:12px 0 22px" data-i18n="k.lens.h">One kundli,<br>three ways to read it.</h2>
+      <div class="lens" role="group" aria-label="Chart lens">
+        <button data-lens="self"  aria-pressed="true"  data-i18n="k.lens.self">Self</button>
+        <button data-lens="bonds" aria-pressed="false" data-i18n="k.lens.bonds">Bonds</button>
+        <button data-lens="work"  aria-pressed="false" data-i18n="k.lens.work">Work</button>
+      </div>
+      <p class="lens-note" id="lensNote"></p>
+      <a class="btn" href="paath.html" data-keeplang style="margin-top:26px"
+         data-i18n="k.next">See what to recite</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow" data-i18n="k.planets.eyebrow">Your grahas</div>
+      <h2 class="display" data-i18n="k.planets.h">Nine planets, in plain language.</h2>
+    </div>
+    <div id="planets"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow" data-i18n="d.eyebrow">Vimshottari</div>
+      <h2 class="display" data-i18n="d.h">Your dasha timeline.</h2>
+      <p class="lede" style="margin-top:14px" data-i18n="d.lede">The 120-year cycle.</p>
+    </div>
+    <div class="dasha" id="dasha"></div>
+    <p class="lede" id="antardasha" style="margin-top:18px;font-size:15px"></p>
+  </section>
+
+  <section class="section">
+    <div class="eyebrow" data-i18n="pa.eyebrow">Panchang</div>
+    <h2 class="display" style="margin:12px 0 0" data-i18n="pa.h">Today, by the old reckoning.</h2>
+    <dl class="panchang" id="panchang"></dl>
+    <p class="lede" style="margin-top:34px;font-size:14px" data-i18n="n.notAdvice"></p>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p style="margin:0" data-i18n="f.method">Charts use the Lahiri ayanamsa.</p>
+  <p style="margin:6px 0 0" data-i18n="f.disc">Traditional suggestions only.</p>
+  <p style="margin:16px 0 0"><a href="https://sanskritagain.com" data-i18n="f.shop">Back to SanskritAgain</a></p>
+</footer>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
+<script>
+let lensKey = "self";
+const lensBtns = [...document.querySelectorAll(".lens button")];
+function paintLens(lang){
+  document.getElementById("lensNote").textContent = I18N[lang]["k.note." + lensKey];
+  lensBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lens === lensKey)));
+}
+lensBtns.forEach(b => b.addEventListener("click", () => {
+  lensKey = b.dataset.lens;
+  paintLens(document.body.dataset.lang);
+}));
+window.onLangChange = paintLens;
+</script>
+</body>
+</html>
