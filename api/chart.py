@@ -4,12 +4,17 @@ Body: {"date":"1994-08-14","time":"09:25","lat":26.9124,"lon":75.7873,"tz":5.5}
 Returns the kundli plus ranked recitation suggestions in EN and HI.
 """
 import json
+import os
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler
+import urllib.request
 
 import swisseph as swe
 
 swe.set_sid_mode(swe.SIDM_LAHIRI)
+
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "").strip()
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "google/gemini-2.5-flash").strip()
 
 RASHIS = ["Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
           "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena"]
@@ -810,6 +815,76 @@ def answer_question(qid, P, dasha, maha, ss, recs):
             "lines": {"en": en, "hi": hi}}
 
 
+def openrouter_answer(answer, P, chart, maha, lang):
+    if not OPENROUTER_API_KEY or not answer:
+        return answer
+
+    q = answer["q"].get(lang) or answer["q"]["en"]
+    base = answer["lines"].get(lang) or answer["lines"]["en"]
+    planets = [
+        f"{k}: {v['rashiName']} rashi, house {v['house']}, "
+        f"{'retrograde' if v.get('retro') else 'direct'}"
+        for k, v in P.items()
+    ]
+    payload = {
+        "model": OPENROUTER_MODEL,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are a careful Vedic astrology assistant for SanskritAgain. "
+                    "Use only the chart facts provided. Do not invent exact events, "
+                    "medical/legal/financial guarantees, or fear-based claims. "
+                    "Answer warmly in Hindi if lang=hi, otherwise English. "
+                    "Return JSON only: {\"lines\":[\"...\", \"...\", \"...\"]}. "
+                    "Each line should be plain, useful, and under 220 characters."
+                )
+            },
+            {
+                "role": "user",
+                "content": json.dumps({
+                    "lang": lang,
+                    "question": q,
+                    "lagna": chart["lagna"]["rashiName"],
+                    "moon_nakshatra": P["Chandra"]["nakshatra"],
+                    "current_dasha": maha,
+                    "planets": planets,
+                    "base_answer": base
+                }, ensure_ascii=False)
+            }
+        ],
+        "temperature": 0.55,
+        "max_tokens": 500
+    }
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://astro.sanskritagain.com",
+            "X-Title": "SanskritAgain Astro"
+        },
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=12) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        content = data["choices"][0]["message"]["content"]
+        parsed = json.loads(content)
+        lines = [str(x).strip()[:320] for x in parsed.get("lines", []) if str(x).strip()]
+        if len(lines) >= 2:
+            enriched = dict(answer)
+            enriched["lines"] = dict(answer["lines"])
+            enriched["lines"][lang] = lines[:5]
+            enriched["engine"] = "openrouter"
+            return enriched
+    except Exception as e:
+        print("OPENROUTER answer failed:", e)
+    return answer
+
+
 # 27 nakshatras: ruling graha and what the old texts say the person is like
 NAK_INFO = {
 "Ashwini":("Ketu","quick to start, quick to heal","शुरू करने और सँभलने में तेज़"),
@@ -1228,6 +1303,11 @@ def build_response(body):
     maha = current_dasha(chart["dasha"])
     anta, anta_seq = antardasha(maha) if maha else (None, [])
 
+    lang = body.get("lang") if body.get("lang") in ("en", "hi") else "en"
+    ans = answer_question(body.get("question"), P, chart["dasha"], maha,
+                          sade_sati(P["Chandra"]["rashi"], tr), recs)
+    ans = openrouter_answer(ans, P, chart, maha, lang)
+
     return {
         "sadeSati": sade_sati(P["Chandra"]["rashi"], tr),
         "doshas": doshas(P),
@@ -1244,8 +1324,7 @@ def build_response(body):
         "concern": concern_reading(body.get("concern"), P, maha["lord"] if maha else None),
         "questions": [{"id": q["id"], "cat": q["cat"],
                        "en": q["en"], "hi": q["hi"]} for q in QUESTIONS],
-        "answer": answer_question(body.get("question"), P, chart["dasha"], maha,
-                                  sade_sati(P["Chandra"]["rashi"], tr), recs),
+        "answer": ans,
         "lagna": {"rashi": chart["lagna"]["rashi"],
                   "rashiName": chart["lagna"]["rashiName"],
                   "degree": chart["lagna"]["degree"],

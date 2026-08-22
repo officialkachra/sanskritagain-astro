@@ -112,6 +112,7 @@ async function fetchChart(birth){
     body: JSON.stringify({date:birth.date, time:birth.time, lat:birth.lat,
                           lon:birth.lon, tz:birth.tz, concern:birth.concern,
                           question: birth.question || PICKED_Q || undefined,
+                          lang: LANG,
                           muhurat: !!document.getElementById("muhurat")})
   });
   const j = await r.json();
@@ -547,7 +548,8 @@ async function askQuestion(qid){
     const r = await fetch("/api/chart", {method:"POST",
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify({date:birth.date, time:birth.time, lat:birth.lat,
-                            lon:birth.lon, tz:birth.tz, question:qid})});
+                            lon:birth.lon, tz:birth.tz, question:qid,
+                            lang: LANG})});
     const j = await r.json();
     if(!r.ok) throw new Error(j.error);
     STATE = j;
