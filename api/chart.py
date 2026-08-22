@@ -14,7 +14,7 @@ import swisseph as swe
 swe.set_sid_mode(swe.SIDM_LAHIRI)
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "").strip()
-OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "google/gemini-2.5-flash").strip()
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "openrouter/free").strip()
 
 RASHIS = ["Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
           "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena"]
@@ -854,7 +854,7 @@ def openrouter_answer(answer, P, chart, maha, lang):
             }
         ],
         "temperature": 0.55,
-        "max_tokens": 500
+        "max_tokens": 420
     }
     req = urllib.request.Request(
         "https://openrouter.ai/api/v1/chat/completions",
@@ -872,8 +872,14 @@ def openrouter_answer(answer, P, chart, maha, lang):
         with urllib.request.urlopen(req, timeout=12) as r:
             data = json.loads(r.read().decode("utf-8"))
         content = data["choices"][0]["message"]["content"]
-        parsed = json.loads(content)
-        lines = [str(x).strip()[:320] for x in parsed.get("lines", []) if str(x).strip()]
+        if "thinking process" in content.lower():
+            return answer
+        try:
+            parsed = json.loads(content)
+            raw_lines = parsed.get("lines", [])
+        except json.JSONDecodeError:
+            raw_lines = [line for line in content.splitlines() if line.strip()]
+        lines = [str(x).strip(" -•\t")[:320] for x in raw_lines if str(x).strip(" -•\t")]
         if len(lines) >= 2:
             enriched = dict(answer)
             enriched["lines"] = dict(answer["lines"])
