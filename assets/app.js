@@ -180,6 +180,7 @@ function renderAll(){
   renderYantra();
   renderTriptych();
   renderGate();
+  renderCardTabs();
   drawShareCard();
   if(window.onLangChange) window.onLangChange(LANG);
 }
@@ -654,72 +655,250 @@ function renderToday(){
 }
 
 
-/* ================= share card: a 9:16 image for stories ================= */
+/* ================= share cards: five designs, 9:16 ================= */
+const CARD_KEYS = ["nakshatra","rashi","kundli","dasha","paath"];
+let CARD_PICK = "nakshatra";
+
+const CARD_SKIN = {
+  leaf: {a:"#EFE6D0", b:"#D8CAA6", ink:"#1A1710", soft:"rgba(42,36,24,.32)",
+         gold:"#8A6E2A", red:"#A8390B"},
+  ink:  {a:"#12130F", b:"#1C1D17", ink:"#E9DFC7", soft:"rgba(233,223,199,.22)",
+         gold:"#C9A227", red:"#D4622B"}
+};
+
+function cardFonts(hi){
+  return {
+    disp: hi ? "'Tiro Devanagari Hindi', serif" : "'Cormorant Garamond', serif",
+    dev:  "'Tiro Devanagari Sanskrit', serif",
+    mono: "'IBM Plex Mono', monospace"
+  };
+}
+
+function cardFrame(x, W, H, sk, title){
+  const g = x.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, sk.a); g.addColorStop(1, sk.b);
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.strokeStyle = sk.soft; x.lineWidth = 3;
+  x.strokeRect(58, 58, W-116, H-116);
+  x.lineWidth = 1; x.strokeRect(78, 78, W-156, H-156);
+  // corner marks — a manuscript convention, not decoration
+  [[78,78,1,1],[W-78,78,-1,1],[78,H-78,1,-1],[W-78,H-78,-1,-1]].forEach(c=>{
+    x.beginPath();
+    x.moveTo(c[0]+c[2]*46, c[1]); x.lineTo(c[0], c[1]); x.lineTo(c[0], c[1]+c[3]*46);
+    x.lineWidth = 3; x.strokeStyle = sk.gold; x.stroke();
+  });
+  x.textAlign = "center";
+  x.fillStyle = sk.gold;
+  x.font = "500 25px " + cardFonts(false).mono;
+  x.fillText(title, W/2, 178);
+}
+
+function cardName(x, W, sk, name, hi, y){
+  if(!name) return;
+  x.fillStyle = sk.ink;
+  x.font = (hi ? "400 " : "300 ") + "62px " + cardFonts(hi).disp;
+  x.fillText(name, W/2, y);
+}
+
+function cardFooter(x, W, H, sk){
+  x.fillStyle = sk.soft;
+  x.font = "23px " + cardFonts(false).mono;
+  x.fillText("ASTRO.SANSKRITAGAIN.COM", W/2, H - 140);
+}
+
+function ringOfGrahas(x, cx, cy, R, sk, small){
+  x.strokeStyle = sk.soft; x.lineWidth = 1;
+  x.beginPath(); x.arc(cx, cy, R, 0, Math.PI*2); x.stroke();
+  x.beginPath(); x.arc(cx, cy, R-44, 0, Math.PI*2); x.stroke();
+  for(let i=0;i<12;i++){
+    const a = (i*30 - 90)*Math.PI/180;
+    x.beginPath();
+    x.moveTo(cx+Math.cos(a)*(R-44), cy+Math.sin(a)*(R-44));
+    x.lineTo(cx+Math.cos(a)*R,      cy+Math.sin(a)*R);
+    x.stroke();
+  }
+  x.font = (small ? 46 : 58) + "px " + cardFonts(false).dev;
+  (STATE.planets || []).forEach(p=>{
+    const lon = (p.lon != null) ? p.lon : p.rashi*30 + (p.degree || 15);
+    const a = (lon - 90)*Math.PI/180, r = R - (small ? 86 : 106);
+    x.fillStyle = p.retro ? sk.red : sk.ink;
+    x.fillText(p.dev, cx+Math.cos(a)*r, cy+Math.sin(a)*r + (small ? 16 : 20));
+  });
+  x.fillStyle = sk.red;
+  x.beginPath(); x.arc(cx, cy, 8, 0, Math.PI*2); x.fill();
+}
+
+function northIndianChart(x, cx, cy, S, sk){
+  const h = S/2, L = cx-h, T = cy-h;
+  x.strokeStyle = sk.ink; x.lineWidth = 3;
+  x.strokeRect(L, T, S, S);
+  x.lineWidth = 1.6;
+  x.beginPath();
+  x.moveTo(L, T); x.lineTo(L+S, T+S);
+  x.moveTo(L+S, T); x.lineTo(L, T+S);
+  x.moveTo(L+h, T); x.lineTo(L+S, T+h); x.lineTo(L+h, T+S); x.lineTo(L, T+h); x.closePath();
+  x.stroke();
+  const cell = {1:[.50,.21],2:[.25,.09],3:[.09,.25],4:[.29,.50],5:[.09,.75],6:[.25,.93],
+                7:[.50,.79],8:[.75,.93],9:[.91,.75],10:[.71,.50],11:[.91,.25],12:[.75,.09]};
+  x.font = "40px " + cardFonts(false).dev;
+  for(let hnum=1; hnum<=12; hnum++){
+    const here = (STATE.planets||[]).filter(p=>p.house===hnum);
+    here.forEach((p,k)=>{
+      x.fillStyle = p.retro ? sk.red : sk.ink;
+      x.fillText(p.dev, L + cell[hnum][0]*S, T + cell[hnum][1]*S + k*44);
+    });
+  }
+}
+
+function wrapText(x, text, cx, y, maxW, lh, lines){
+  const words = text.split(" ");
+  let line = "", out = [];
+  words.forEach(w=>{
+    const test = line ? line + " " + w : w;
+    if(x.measureText(test).width > maxW && line){ out.push(line); line = w; }
+    else line = test;
+  });
+  if(line) out.push(line);
+  out.slice(0, lines).forEach((l,i)=> x.fillText(l, cx, y + i*lh));
+  return out.length;
+}
+
+let FONTS_READY = false;
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(()=>{ FONTS_READY = true; drawShareCard(); });
+}
+
 function drawShareCard(){
   const cv = document.getElementById("shareCanvas");
-  if(!cv || !STATE.nakshatraCard) return;
+  if(!cv) return;
   const W = 1080, H = 1920;
   cv.width = W; cv.height = H;
   const x = cv.getContext("2d");
   const hi = LANG === "hi";
-  const n  = STATE.nakshatraCard;
+  const f = cardFonts(hi);
+  const b = readBirth() || {};
+  const name = (b.name || "").trim();
+  const n = STATE.nakshatraCard;
   const rashi = RASHI_TEXT[LANG][STATE.lagna.rashi];
+  const d = I18N[LANG];
 
-  // aged palm leaf, the same surface the kundli sits on
-  const g = x.createLinearGradient(0, 0, W, H);
-  g.addColorStop(0, "#EFE6D0"); g.addColorStop(1, "#D8CAA6");
-  x.fillStyle = g; x.fillRect(0, 0, W, H);
-
-  x.strokeStyle = "rgba(42,36,24,.55)"; x.lineWidth = 3;
-  x.strokeRect(58, 58, W - 116, H - 116);
-  x.lineWidth = 1;
-  x.strokeRect(78, 78, W - 156, H - 156);
-
-  x.textAlign = "center";
-  x.fillStyle = "#8A6E2A";
-  x.font = "500 26px 'IBM Plex Mono', monospace";
-  x.fillText(hi ? "जन्म नक्षत्र" : "BIRTH NAKSHATRA", W/2, 240);
-
-  x.fillStyle = "#1A1710";
-  x.font = hi ? "400 130px 'Tiro Devanagari Hindi', serif"
-              : "300 130px 'Cormorant Garamond', serif";
-  x.fillText(hi ? (n.nameHi || n.name) : n.name, W/2, 400);
-
-  x.fillStyle = "#8A6E2A";
-  x.font = "500 28px 'IBM Plex Mono', monospace";
-  x.fillText(`${hi ? "पाद" : "PADA"} ${n.pada}  ·  ${hi ? n.lordHi : n.lord}`, W/2, 466);
-
-  // the nine grahas around a ring — the chart itself, not decoration
-  const cx = W/2, cy = 1010, R = 300;
-  x.strokeStyle = "rgba(42,36,24,.30)";
-  x.beginPath(); x.arc(cx, cy, R, 0, Math.PI*2); x.stroke();
-  x.beginPath(); x.arc(cx, cy, R - 46, 0, Math.PI*2); x.stroke();
-  for(let i = 0; i < 12; i++){
-    const a = (i*30 - 90) * Math.PI/180;
-    x.beginPath();
-    x.moveTo(cx + Math.cos(a)*(R-46), cy + Math.sin(a)*(R-46));
-    x.lineTo(cx + Math.cos(a)*R,      cy + Math.sin(a)*R);
-    x.stroke();
+  if(CARD_PICK === "nakshatra"){
+    const sk = CARD_SKIN.leaf;
+    cardFrame(x, W, H, sk, hi ? "जन्म नक्षत्र" : "BIRTH NAKSHATRA");
+    cardName(x, W, sk, name, hi, 300);
+    if(n){
+      x.fillStyle = sk.ink;
+      x.font = (hi ? "400 " : "300 ") + "136px " + f.disp;
+      x.fillText(hi ? (n.nameHi || n.name) : n.name, W/2, 500);
+      x.fillStyle = sk.gold; x.font = "500 28px " + f.mono;
+      x.fillText(`${hi ? "पाद" : "PADA"} ${n.pada}  ·  ${hi ? n.lordHi : n.lord}`, W/2, 566);
+      // constellation
+      const pts = [[380,760],[520,690],[660,800],[760,730],[560,930],[430,1000],[690,1030]];
+      x.strokeStyle = sk.soft; x.lineWidth = 1.4;
+      x.beginPath(); pts.forEach((p,i)=> i ? x.lineTo(p[0],p[1]) : x.moveTo(p[0],p[1])); x.stroke();
+      pts.forEach((p,i)=>{ x.fillStyle = sk.gold;
+        x.beginPath(); x.arc(p[0], p[1], 5 + (i%3)*2.6, 0, Math.PI*2); x.fill(); });
+      x.fillStyle = sk.ink; x.font = "34px " + f.disp; x.textAlign = "center";
+      wrapText(x, (n[LANG]||"").split("—").pop().trim(), W/2, 1250, 800, 54, 4);
+    }
+    cardFooter(x, W, H, sk);
   }
-  x.font = "60px 'Tiro Devanagari Sanskrit', serif";
-  (STATE.planets || []).forEach(p=>{
-    const lon = (p.lon != null) ? p.lon : p.rashi*30 + (p.degree || 15);
-    const a = (lon - 90) * Math.PI/180;
-    const r = R - 110;
-    x.fillStyle = p.retro ? "#A8390B" : "#1A1710";
-    x.fillText(p.dev, cx + Math.cos(a)*r, cy + Math.sin(a)*r + 20);
-  });
-  x.fillStyle = "#A8390B";
-  x.beginPath(); x.arc(cx, cy, 9, 0, Math.PI*2); x.fill();
 
-  x.fillStyle = "#1A1710";
-  x.font = hi ? "400 54px 'Tiro Devanagari Hindi', serif"
-              : "300 54px 'Cormorant Garamond', serif";
-  x.fillText(hi ? `${rashi} लग्न` : `${rashi} rising`, W/2, 1450);
+  else if(CARD_PICK === "rashi"){
+    const sk = CARD_SKIN.ink;
+    cardFrame(x, W, H, sk, hi ? "लग्न राशि" : "ASCENDANT");
+    cardName(x, W, sk, name, hi, 300);
+    x.fillStyle = sk.ink;
+    x.font = (hi ? "400 " : "300 ") + "160px " + f.disp;
+    x.fillText(rashi, W/2, 520);
+    ringOfGrahas(x, W/2, 1080, 330, sk, false);
+    x.fillStyle = sk.gold; x.font = "500 27px " + f.mono;
+    x.fillText(hi ? `चंद्र · ${RASHI_TEXT[LANG][(STATE.planets.find(p=>p.key==="Chandra")||{}).rashi ?? 0]}`
+                  : `MOON · ${RASHI_TEXT.en[(STATE.planets.find(p=>p.key==="Chandra")||{}).rashi ?? 0]}`,
+              W/2, 1560);
+    cardFooter(x, W, H, sk);
+  }
 
-  x.fillStyle = "rgba(26,23,16,.62)";
-  x.font = "24px 'IBM Plex Mono', monospace";
-  x.fillText("ASTRO.SANSKRITAGAIN.COM", W/2, 1770);
+  else if(CARD_PICK === "kundli"){
+    const sk = CARD_SKIN.leaf;
+    cardFrame(x, W, H, sk, hi ? "जन्म कुंडली" : "JANMA KUNDLI");
+    cardName(x, W, sk, name, hi, 300);
+    northIndianChart(x, W/2, 1000, 720, sk);
+    x.fillStyle = sk.gold; x.font = "500 27px " + f.mono;
+    x.fillText(`${rashi.toUpperCase()} ${hi ? "लग्न" : "LAGNA"}`, W/2, 1500);
+    if(b.date){ x.fillStyle = sk.soft; x.font = "25px " + f.mono;
+      x.fillText(b.date + (b.time ? "  " + b.time : ""), W/2, 1552); }
+    cardFooter(x, W, H, sk);
+  }
+
+  else if(CARD_PICK === "dasha"){
+    const sk = CARD_SKIN.ink;
+    cardFrame(x, W, H, sk, hi ? "वर्तमान दशा" : "CURRENT PERIOD");
+    cardName(x, W, sk, name, hi, 300);
+    const names = PLANET_TEXT[LANG];
+    const m = STATE.currentDasha, a = STATE.antardasha;
+    if(m){
+      x.fillStyle = sk.ink;
+      x.font = (hi ? "400 " : "300 ") + "112px " + f.disp;
+      const lords = a ? `${names[m.lord][0]} / ${names[a.lord][0]}` : names[m.lord][0];
+      x.fillText(lords, W/2, 560);
+      x.fillStyle = sk.gold; x.font = "500 30px " + f.mono;
+      if(a) x.fillText(`${a.start.slice(0,7)}  —  ${a.end.slice(0,7)}`, W/2, 630);
+      // orbit motif
+      x.strokeStyle = sk.soft; x.lineWidth = 1;
+      [150, 230, 310].forEach(r=>{ x.beginPath(); x.arc(W/2, 1080, r, 0, Math.PI*2); x.stroke(); });
+      x.fillStyle = sk.red;
+      x.beginPath(); x.arc(W/2 + 230, 1080, 16, 0, Math.PI*2); x.fill();
+      x.fillStyle = sk.ink; x.font = "88px " + f.dev;
+      x.fillText((STATE.planets.find(p=>p.key===m.lord)||{}).dev || "", W/2, 1110);
+    }
+    cardFooter(x, W, H, sk);
+  }
+
+  else if(CARD_PICK === "paath"){
+    const sk = CARD_SKIN.leaf;
+    cardFrame(x, W, H, sk, hi ? "मेरा पाठ" : "MY RECITATION");
+    cardName(x, W, sk, name, hi, 300);
+    const r = (STATE.recommendations || [])[0];
+    if(r){
+      x.fillStyle = sk.ink;
+      x.font = (hi ? "400 " : "300 ") + "104px " + f.disp;
+      x.fillText(r.title[LANG], W/2, 520);
+      x.fillStyle = sk.gold; x.font = "500 27px " + f.mono;
+      x.fillText(r.sub[LANG], W/2, 586);
+      // shri yantra motif
+      const cx = W/2, cy = 1080;
+      x.strokeStyle = sk.gold; x.lineWidth = 1.4;
+      for(let i=0;i<16;i++){ const a=i*22.5*Math.PI/180;
+        x.beginPath(); x.arc(cx+Math.cos(a)*300, cy+Math.sin(a)*300, 30, 0, Math.PI*2); x.stroke(); }
+      x.strokeStyle = sk.soft;
+      [[0,-250,-215,160,215,160],[0,250,-215,-160,215,-160],
+       [0,-180,-155,115,155,115],[0,180,-155,-115,155,-115]].forEach(t=>{
+        x.beginPath(); x.moveTo(cx+t[0],cy+t[1]); x.lineTo(cx+t[2],cy+t[3]);
+        x.lineTo(cx+t[4],cy+t[5]); x.closePath(); x.stroke(); });
+      x.fillStyle = sk.red;
+      x.beginPath(); x.arc(cx, cy, 9, 0, Math.PI*2); x.fill();
+      x.fillStyle = sk.ink; x.font = "32px " + f.disp;
+      wrapText(x, (r.why[0]||{})[LANG] || "", W/2, 1520, 820, 50, 3);
+    }
+    cardFooter(x, W, H, sk);
+  }
+}
+
+function renderCardTabs(){
+  const host = document.getElementById("cardTabs");
+  if(!host) return;
+  const d = I18N[LANG];
+  host.innerHTML = CARD_KEYS.map(k=>
+    `<button class="chip" data-card="${k}" aria-pressed="${k === CARD_PICK}">${d["cd." + k]}</button>`
+  ).join("");
+  host.querySelectorAll(".chip").forEach(b=>
+    b.addEventListener("click", ()=>{
+      CARD_PICK = b.dataset.card;
+      renderCardTabs();
+      renderCardTabs();
+  drawShareCard();
+    }));
 }
 
 function downloadShare(){
@@ -728,7 +907,7 @@ function downloadShare(){
   cv.toBlob(b=>{
     const u = URL.createObjectURL(b);
     const a = document.createElement("a");
-    a.href = u; a.download = "meri-kundli.png"; a.click();
+    a.href = u; a.download = `meri-${CARD_PICK}.png`; a.click();
     setTimeout(()=>URL.revokeObjectURL(u), 4000);
   }, "image/png");
 }
@@ -737,7 +916,7 @@ async function shareNative(){
   const cv = document.getElementById("shareCanvas");
   if(!cv) return downloadShare();
   cv.toBlob(async b=>{
-    const file = new File([b], "meri-kundli.png", {type:"image/png"});
+    const file = new File([b], `meri-${CARD_PICK}.png`, {type:"image/png"});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       try{ await navigator.share({files:[file]}); return; }catch(e){}
     }

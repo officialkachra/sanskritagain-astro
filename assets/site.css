@@ -460,3 +460,8 @@ body[data-lang="hi"] .tcell.now .lords{font-size:25px}
   .tcell.now{transform:none}
   .tcell svg,.tcell.now svg{width:78px;height:78px}
 }
+
+/* card picker + preview */
+#cardTabs .chip{padding:8px 13px}
+.sharewrap{align-items:start}
+#shareCanvas{background:var(--ink-2);transition:opacity .25s ease}
