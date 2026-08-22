@@ -16,6 +16,7 @@
   <a class="mark" href="index.html" data-keeplang>Sanskrit<em>Again</em></a>
   <nav>
     <a href="kundli.html" data-i18n="nav.kundli">Chart</a>
+    <a href="milan.html"  data-i18n="nav.milan">Milan</a>
     <a href="aaj.html"    data-i18n="nav.aaj">Today</a>
     <a href="paath.html"  data-i18n="nav.paath">Recitations</a>
   </nav>
@@ -28,15 +29,20 @@
 
 <main class="wrap">
 
-  <section class="hero split" style="align-items:center;gap:64px">
-    <div>
-      <div class="eyebrow" data-i18n="home.eyebrow">Your chart, read plainly</div>
-      <h1 class="display">
-        <span data-i18n="home.h1a">The planets you were</span><br>
-        <span data-i18n="home.h1b">born under,</span><br>
-        <i class="italic" data-i18n="home.h1c">and what to recite.</i>
-      </h1>
-      <p class="lede" data-i18n="home.lede">Enter your birth details.</p>
+  <section class="hero" style="padding-bottom:24px">
+    <div class="eyebrow" data-i18n="home.eyebrow">Your chart, read plainly</div>
+    <h1 class="display">
+      <span data-i18n="home.h1a">The planets you were</span><br>
+      <span data-i18n="home.h1b">born under,</span>
+      <i class="italic" data-i18n="home.h1c">and what to recite.</i>
+    </h1>
+    <p class="lede" data-i18n="home.lede">Enter your birth details.</p>
+  </section>
+
+  <section class="split" style="align-items:center;gap:56px;padding-bottom:56px">
+    <div class="chakra-wrap">
+      <svg id="chakra" class="chakra" viewBox="0 0 520 520" role="img"
+           aria-label="The nine grahas moving into their positions"></svg>
     </div>
 
     <div class="leaf-panel" id="birth" style="padding:34px 30px">
@@ -79,10 +85,6 @@
   </section>
 
   <section class="section">
-    <div class="chakra-wrap" style="max-width:440px;margin-bottom:44px">
-      <svg id="chakra" class="chakra" viewBox="0 0 520 520" role="img"
-           aria-label="Zodiac wheel"></svg>
-    </div>
     <div class="eyebrow" data-i18n="q.eyebrow">Ask the chart</div>
     <h2 class="display" style="margin:12px 0 0" data-i18n="q.h">What do you want to know?</h2>
     <p class="lede" style="margin:14px 0 30px" data-i18n="q.lede"></p>

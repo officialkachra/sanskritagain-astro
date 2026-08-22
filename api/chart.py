@@ -916,8 +916,231 @@ def today_reading(P, tr, pan, ss):
                          "title": pr["title"], "vidhi": pr["vidhi"],
                          "varaLord": vara_lord}}
 
+# ============================================================== guna milan
+# Ashtakoot: eight kootas, 36 points. One traditional method among several.
+
+VARNA_BY_RASHI = {3: 4, 7: 4, 11: 4,        # water  -> Brahmin
+                  0: 3, 4: 3, 8: 3,          # fire   -> Kshatriya
+                  1: 2, 5: 2, 9: 2,          # earth  -> Vaishya
+                  2: 1, 6: 1, 10: 1}         # air    -> Shudra
+
+VASHYA_GROUP = {0: "chatush", 1: "chatush", 2: "manava", 3: "jala", 4: "vana",
+                5: "manava", 6: "manava", 7: "keeta", 8: "manava", 9: "jala",
+                10: "manava", 11: "jala"}
+VASHYA_PTS = {
+    ("chatush", "chatush"): 2, ("manava", "manava"): 2, ("jala", "jala"): 2,
+    ("vana", "vana"): 2, ("keeta", "keeta"): 2,
+    ("chatush", "jala"): 1, ("jala", "chatush"): 1,
+    ("manava", "jala"): 1, ("jala", "manava"): 1,
+    ("chatush", "manava"): 1, ("manava", "chatush"): 1,
+    ("chatush", "vana"): 0, ("vana", "chatush"): 0,
+    ("keeta", "jala"): 1, ("jala", "keeta"): 1,
+}
+
+# nakshatra index -> yoni animal
+YONI = ["horse","elephant","sheep","snake","snake","dog","cat","sheep","cat",
+        "rat","rat","cow","buffalo","tiger","buffalo","tiger","deer","deer",
+        "dog","monkey","mongoose","monkey","lion","horse","lion","cow","elephant"]
+YONI_ENEMY = {("cow","tiger"),("elephant","lion"),("horse","buffalo"),
+              ("dog","deer"),("snake","mongoose"),("monkey","sheep"),
+              ("cat","rat"),("lion","elephant"),("tiger","cow")}
+
+RASHI_LORD = ["Mangal","Shukra","Budh","Chandra","Surya","Budh",
+              "Shukra","Mangal","Guru","Shani","Shani","Guru"]
+FRIENDS = {
+    "Surya":   {"f": {"Chandra","Mangal","Guru"},  "e": {"Shukra","Shani"}},
+    "Chandra": {"f": {"Surya","Budh"},             "e": set()},
+    "Mangal":  {"f": {"Surya","Chandra","Guru"},   "e": {"Budh"}},
+    "Budh":    {"f": {"Surya","Shukra"},           "e": {"Chandra"}},
+    "Guru":    {"f": {"Surya","Chandra","Mangal"}, "e": {"Budh","Shukra"}},
+    "Shukra":  {"f": {"Budh","Shani"},             "e": {"Surya","Chandra"}},
+    "Shani":   {"f": {"Budh","Shukra"},            "e": {"Surya","Chandra","Mangal"}},
+}
+
+GANA = (["dev","manushya","rakshasa","manushya","dev","manushya","dev","dev",
+         "rakshasa","rakshasa","manushya","manushya","dev","rakshasa","dev",
+         "rakshasa","dev","rakshasa","rakshasa","manushya","manushya","dev",
+         "rakshasa","rakshasa","manushya","manushya","dev"])
+
+NADI = ["adi","madhya","antya","adi","madhya","antya","adi","madhya","antya",
+        "antya","madhya","adi","antya","madhya","adi","antya","madhya","adi",
+        "adi","madhya","antya","adi","madhya","antya","adi","madhya","antya"]
+
+
+def _varna(b, g):
+    pts = 1 if VARNA_BY_RASHI[g] >= VARNA_BY_RASHI[b] else 0
+    return pts, 1
+
+
+def _vashya(b, g):
+    pair = (VASHYA_GROUP[g], VASHYA_GROUP[b])
+    return VASHYA_PTS.get(pair, 0.5), 2
+
+
+def _tara(bn, gn):
+    def ok(frm, to):
+        return ((to - frm) % 27 + 1) % 9 not in (3, 5, 7)
+    good = ok(bn, gn) + ok(gn, bn)
+    return {2: 3, 1: 1.5, 0: 0}[good], 3
+
+
+def _yoni(bn, gn):
+    a, b = YONI[bn], YONI[gn]
+    if a == b:
+        return 4, 4
+    if (a, b) in YONI_ENEMY or (b, a) in YONI_ENEMY:
+        return 0, 4
+    return 2, 4
+
+
+def _maitri(b, g):
+    lb, lg = RASHI_LORD[b], RASHI_LORD[g]
+    if lb == lg:
+        return 5, 5
+
+    def rel(x, y):
+        if y in FRIENDS[x]["f"]:
+            return "f"
+        if y in FRIENDS[x]["e"]:
+            return "e"
+        return "n"
+    r1, r2 = rel(lb, lg), rel(lg, lb)
+    table = {("f","f"):5, ("f","n"):4, ("n","f"):4, ("n","n"):3,
+             ("f","e"):1, ("e","f"):1, ("n","e"):0.5, ("e","n"):0.5, ("e","e"):0}
+    return table[(r1, r2)], 5
+
+
+def _gana(bn, gn):
+    a, b = GANA[bn], GANA[gn]
+    if a == b:
+        return 6, 6
+    pair = {a, b}
+    if pair == {"dev", "manushya"}:
+        return 5, 6
+    if pair == {"manushya", "rakshasa"}:
+        return 1, 6
+    return 0, 6
+
+
+def _bhakoot(b, g):
+    d1, d2 = (g - b) % 12 + 1, (b - g) % 12 + 1
+    bad = {(6, 8), (8, 6), (9, 5), (5, 9), (12, 2), (2, 12)}
+    return (0 if (d1, d2) in bad else 7), 7
+
+
+def _nadi(bn, gn):
+    return (0 if NADI[bn] == NADI[gn] else 8), 8
+
+
+KOOT_NAMES = {
+    "varna":   ("Varna", "वर्ण", "temperament and outlook",
+                "स्वभाव और सोच"),
+    "vashya":  ("Vashya", "वश्य", "who gives way to whom",
+                "कौन किसकी बात मानेगा"),
+    "tara":    ("Tara", "तारा", "health and general fortune",
+                "सेहत और भाग्य"),
+    "yoni":    ("Yoni", "योनि", "physical compatibility",
+                "शारीरिक अनुकूलता"),
+    "maitri":  ("Graha Maitri", "ग्रह मैत्री", "mental friendship",
+                "मानसिक मेल"),
+    "gana":    ("Gana", "गण", "nature and conduct",
+                "स्वभाव और व्यवहार"),
+    "bhakoot": ("Bhakoot", "भकूट", "prosperity of the household",
+                "घर की समृद्धि"),
+    "nadi":    ("Nadi", "नाड़ी", "health of children and lineage",
+                "संतान और वंश का स्वास्थ्य"),
+}
+
+
+def guna_milan(bride, groom):
+    """bride/groom: dicts with moon rashi index and nakshatra index."""
+    b, g = bride["rashi"], groom["rashi"]
+    bn, gn = bride["nak"], groom["nak"]
+
+    scores = {
+        "varna":   _varna(b, g),
+        "vashya":  _vashya(b, g),
+        "tara":    _tara(bn, gn),
+        "yoni":    _yoni(bn, gn),
+        "maitri":  _maitri(b, g),
+        "gana":    _gana(bn, gn),
+        "bhakoot": _bhakoot(b, g),
+        "nadi":    _nadi(bn, gn),
+    }
+    total = sum(v[0] for v in scores.values())
+
+    rows = []
+    for k, (got, mx) in scores.items():
+        en, hi, den, dhi = KOOT_NAMES[k]
+        rows.append({"key": k, "name": {"en": en, "hi": hi},
+                     "about": {"en": den, "hi": dhi},
+                     "got": got, "max": mx})
+
+    if total >= 32:
+        verdict = {"en": "An unusually high score. On this method the match is "
+                         "considered excellent.",
+                   "hi": "बहुत ऊँचा अंक। इस पद्धति के अनुसार मिलान उत्तम माना जाता है।"}
+    elif total >= 25:
+        verdict = {"en": "A strong score. Most astrologers treat anything above 25 "
+                         "as a good match.",
+                   "hi": "अच्छा अंक। ज़्यादातर ज्योतिषी 25 से ऊपर को अच्छा मिलान मानते हैं।"}
+    elif total >= 18:
+        verdict = {"en": "An acceptable score. Above 18 is the usual line for going "
+                         "ahead, though the individual kootas matter more than the total.",
+                   "hi": "स्वीकार्य अंक। 18 से ऊपर को आम तौर पर आगे बढ़ने लायक माना "
+                         "जाता है, पर कुल अंक से ज़्यादा अलग-अलग कूट मायने रखते हैं।"}
+    else:
+        verdict = {"en": "Below the usual threshold of 18. This does not settle the "
+                         "matter — it means an astrologer should look at both charts "
+                         "properly rather than at this number.",
+                   "hi": "आम सीमा 18 से नीचे। इससे बात तय नहीं होती — इसका मतलब है कि "
+                         "किसी ज्योतिषी को इस अंक की जगह दोनों कुंडलियाँ ठीक से देखनी चाहिए।"}
+
+    doshas = []
+    if scores["nadi"][0] == 0:
+        doshas.append({"key": "nadi",
+            "en": "Nadi dosha — both have the same nadi. This is the koot most "
+                  "astrologers take seriously. Classical texts also list cancellations "
+                  "for it, so have someone check the full charts.",
+            "hi": "नाड़ी दोष — दोनों की नाड़ी एक है। ज़्यादातर ज्योतिषी इसी कूट को सबसे "
+                  "गंभीरता से लेते हैं। शास्त्रों में इसके भंग भी बताए गए हैं, इसलिए "
+                  "पूरी कुंडलियाँ किसी से ज़रूर दिखवाएँ।"})
+    if scores["bhakoot"][0] == 0:
+        doshas.append({"key": "bhakoot",
+            "en": "Bhakoot dosha — the two Moon signs fall in a difficult count from "
+                  "each other. It is commonly cancelled when the sign lords are "
+                  "friends or the same.",
+            "hi": "भकूट दोष — दोनों की चंद्र राशियाँ एक-दूसरे से कठिन गिनती में हैं। "
+                  "राशि स्वामी मित्र हों या एक ही हों तो यह आम तौर पर भंग हो जाता है।"})
+
+    return {"total": total, "max": 36, "rows": rows,
+            "verdict": verdict, "doshas": doshas}
+
+
 # ----------------------------------------------------------------- handler
+def _moon_of(person):
+    birth = datetime.strptime(f"{person['date']} {person.get('time') or '12:00'}",
+                              "%Y-%m-%d %H:%M")
+    ch = calculate(birth, float(person.get("tz", 5.5)),
+                   float(person["lat"]), float(person["lon"]))["planets"]["Chandra"]
+    return {"rashi": ch["rashi"], "rashiName": ch["rashiName"],
+            "nak": NAKSHATRAS.index(ch["nakshatra"]), "nakshatra": ch["nakshatra"],
+            "nakshatraHi": NAK_HI.get(ch["nakshatra"], ch["nakshatra"])}
+
+
+def build_milan(body):
+    b, g = body.get("bride"), body.get("groom")
+    if not b or not g:
+        raise ValueError("need both bride and groom")
+    bm, gm = _moon_of(b), _moon_of(g)
+    out = guna_milan(bm, gm)
+    out["bride"], out["groom"] = bm, gm
+    return out
+
+
 def build_response(body):
+    if body.get("mode") == "milan":
+        return build_milan(body)
     for f in ("date", "lat", "lon"):
         if body.get(f) in (None, ""):
             raise ValueError(f"missing field: {f}")

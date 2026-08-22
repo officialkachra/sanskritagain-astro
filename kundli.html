@@ -15,6 +15,7 @@
   <a class="mark" href="index.html" data-keeplang>Sanskrit<em>Again</em></a>
   <nav>
     <a href="kundli.html" aria-current="page" data-i18n="nav.kundli">Chart</a>
+    <a href="milan.html"  data-i18n="nav.milan">Milan</a>
     <a href="aaj.html"    data-i18n="nav.aaj">Today</a>
     <a href="paath.html"  data-i18n="nav.paath">Recitations</a>
   </nav>
@@ -44,6 +45,18 @@
       <i class="italic" id="answerTopic"></i>
     </h2>
     <div class="answer" id="answer"></div>
+  </section>
+
+  <section class="sharewrap">
+    <canvas id="shareCanvas" width="1080" height="1920"></canvas>
+    <div>
+      <div class="eyebrow" data-i18n="sh.eyebrow">Share</div>
+      <h2 class="display" data-i18n="sh.h">Your nakshatra, as a card.</h2>
+      <p data-i18n="sh.p"></p>
+      <button class="cta" id="shareBtn" data-i18n="sh.share">Share</button>
+      <button class="btn" id="saveBtn" style="margin-left:10px" data-i18n="sh.save">Save image</button>
+      <div id="gate"></div>
+    </div>
   </section>
 
   <section class="section">
@@ -109,6 +122,15 @@
 
   <section class="section">
     <div class="section-head">
+      <div class="eyebrow" data-i18n="tr.eyebrow">Your chapter</div>
+      <h2 class="display" data-i18n="tr.h">What closed. Where you are.<br>What opens.</h2>
+      <p class="lede" style="margin-top:14px" data-i18n="tr.lede"></p>
+    </div>
+    <div id="triptych"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
       <div class="eyebrow" data-i18n="d.eyebrow">Vimshottari</div>
       <h2 class="display" data-i18n="d.h">Your dasha timeline.</h2>
       <p class="lede" style="margin-top:14px" data-i18n="d.lede">The 120-year cycle.</p>
@@ -145,6 +167,8 @@ lensBtns.forEach(b => b.addEventListener("click", () => {
   paintLens(document.body.dataset.lang);
 }));
 window.onLangChange = paintLens;
+document.getElementById("shareBtn").addEventListener("click", shareNative);
+document.getElementById("saveBtn").addEventListener("click", downloadShare);
 </script>
 </body>
 </html>

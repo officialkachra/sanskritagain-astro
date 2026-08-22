@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-default-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kundli Milan — SanskritAgain</title>
+<meta name="description" content="Ashtakoot Guna Milan — match two birth charts on the traditional 36-point method.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Spectral:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Tiro+Devanagari+Sanskrit&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header><div class="wrap bar">
+  <a class="mark" href="index.html" data-keeplang>Sanskrit<em>Again</em></a>
+  <nav>
+    <a href="kundli.html" data-i18n="nav.kundli">Chart</a>
+    <a href="milan.html"  aria-current="page" data-i18n="nav.milan">Milan</a>
+    <a href="aaj.html"    data-i18n="nav.aaj">Today</a>
+    <a href="paath.html"  data-i18n="nav.paath">Recitations</a>
+  </nav>
+  <button class="themetog" id="themeBtn" aria-label="Toggle theme">◑</button>
+  <div class="langtog" role="group" aria-label="Language">
+    <button data-lang="en" aria-pressed="true">EN</button>
+    <button data-lang="hi" aria-pressed="false">हिं</button>
+  </div>
+</div></header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <div class="eyebrow" data-i18n="m.eyebrow">Kundli milan</div>
+    <h1 class="display" data-i18n="m.h">Match two charts.</h1>
+    <p class="lede" data-i18n="m.lede">Ashtakoot Guna Milan.</p>
+  </section>
+
+  <section style="padding-bottom:16px">
+    <div class="milan-form">
+      <div class="leaf-panel">
+        <p class="who" data-i18n="m.bride">Bride</p>
+        <div class="form" style="max-width:none">
+          <div class="field">
+            <label data-i18n="home.form.date">Date of birth</label>
+            <input id="b-date" type="date">
+          </div>
+          <div class="field">
+            <label data-i18n="home.form.time">Time of birth</label>
+            <input id="b-time" type="time">
+          </div>
+          <div class="field">
+            <label data-i18n="home.form.place">Place of birth</label>
+            <input id="b-place" type="text" placeholder="Jaipur, Rajasthan">
+          </div>
+        </div>
+      </div>
+
+      <div class="leaf-panel">
+        <p class="who" data-i18n="m.groom">Groom</p>
+        <div class="form" style="max-width:none">
+          <div class="field">
+            <label data-i18n="home.form.date">Date of birth</label>
+            <input id="g-date" type="date">
+          </div>
+          <div class="field">
+            <label data-i18n="home.form.time">Time of birth</label>
+            <input id="g-time" type="time">
+          </div>
+          <div class="field">
+            <label data-i18n="home.form.place">Place of birth</label>
+            <input id="g-place" type="text" placeholder="Jaipur, Rajasthan">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="cta" id="m-go" style="margin-top:26px" data-i18n="m.go">Match the charts</button>
+    <p class="lede" id="m-status" style="margin-top:16px;min-height:1.6em"></p>
+  </section>
+
+  <section id="m-result"></section>
+
+  <section class="section">
+    <p class="lede" style="max-width:64ch;font-size:14px" data-i18n="m.note"></p>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p style="margin:0" data-i18n="f.method">Charts use the Lahiri ayanamsa.</p>
+  <p style="margin:6px 0 0" data-i18n="f.disc">Traditional suggestions only.</p>
+  <p style="margin:16px 0 0"><a href="https://sanskritagain.com" data-i18n="f.shop">Back to SanskritAgain</a></p>
+</footer>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
+<script>
+async function person(pre){
+  const d = document.getElementById(pre + "-date").value;
+  const t = document.getElementById(pre + "-time").value;
+  const p = document.getElementById(pre + "-place").value.trim();
+  if(!d || !p) return null;
+  const g = await geocode(p);
+  return {date:d, time:t, lat:g.lat, lon:g.lon, tz:tzOffsetHours(g.tzName, d, t)};
+}
+
+function paintMilan(r){
+  const d = I18N[LANG], host = document.getElementById("m-result");
+  const rows = r.rows.map(k=>{
+    const cls = k.got === 0 ? " zero" : (k.got === k.max ? " full" : "");
+    return `<div class="koot${cls}">
+      <span class="nm">${k.name[LANG]}</span>
+      <span class="ab">${k.about[LANG]}</span>
+      <span class="pt">${k.got} / ${k.max}</span>
+    </div>`;
+  }).join("");
+  const doshas = (r.doshas || []).map(x=>`
+    <div class="flag"><div></div><div><h3>${x.key === "nadi"
+      ? (LANG === "hi" ? "नाड़ी दोष" : "Nadi dosha")
+      : (LANG === "hi" ? "भकूट दोष" : "Bhakoot dosha")}</h3>
+      <p>${x[LANG]}</p></div></div>`).join("");
+
+  host.innerHTML = `
+    <div class="score"><span class="n">${r.total}</span>
+      <span class="d">${d["m.of"]}</span></div>
+    <p class="lede" style="margin:0 0 20px">${r.verdict[LANG]}</p>
+    ${rows}${doshas}`;
+  host.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+document.getElementById("m-go").addEventListener("click", async ()=>{
+  const st = document.getElementById("m-status");
+  const d = I18N[LANG];
+  st.innerHTML = loaderHTML(d["status.loading"]);
+  try{
+    const [bride, groom] = await Promise.all([person("b"), person("g")]);
+    if(!bride || !groom){ st.textContent = d["home.form.hint"]; return; }
+    const res = await fetch("/api/chart", {method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({mode:"milan", bride, groom})});
+    const j = await res.json();
+    if(!res.ok) throw new Error(j.error);
+    st.innerHTML = "";
+    window.__milan = j;
+    paintMilan(j);
+  }catch(e){
+    st.textContent = d["status.error"];
+  }
+});
+
+window.onLangChange = ()=>{ if(window.__milan) paintMilan(window.__milan); };
+</script>
+</body>
+</html>

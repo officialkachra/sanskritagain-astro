@@ -178,6 +178,9 @@ function renderAll(){
   renderNakshatra();
   renderToday();
   renderYantra();
+  renderTriptych();
+  renderGate();
+  drawShareCard();
   if(window.onLangChange) window.onLangChange(LANG);
 }
 
@@ -270,79 +273,102 @@ function renderHeadline(){
    ==================================================================== */
 const ORBIT_ORDER = ["Chandra","Budh","Shukra","Surya","Mangal","Guru","Shani","Rahu","Ketu"];
 
+let CHAKRA_RAF = null;
+
 function renderChakra(){
   const svg = document.getElementById("chakra");
   if(!svg) return;
+  if(CHAKRA_RAF) cancelAnimationFrame(CHAKRA_RAF);
   svg.textContent = "";
   const NS = "http://www.w3.org/2000/svg";
   const el = (t,a,txt)=>{ const n=document.createElementNS(NS,t);
     for(const k in a) n.setAttribute(k,a[k]);
     if(txt!=null) n.textContent=txt; return n; };
 
-  const C = 260, R = 236;                 // centre, outer radius
-  const pos = (lon, r)=>{                 // 0 Mesha at top, clockwise
-    const rad = (lon - 90) * Math.PI / 180;
+  const C = 260, R = 236;
+  const pos = (lon, r)=>{
+    const rad = (lon - 90) * Math.PI/180;
     return [C + r*Math.cos(rad), C + r*Math.sin(rad)];
   };
 
-  const spin = el("g",{class:"ck-spin"});
-
-  spin.appendChild(el("circle",{cx:C,cy:C,r:R,class:"ck-ring"}));
-  spin.appendChild(el("circle",{cx:C,cy:C,r:R-26,class:"ck-ring-gold"}));
-
+  /* ---- static sky: rashi ring, spokes, labels ---- */
+  const sky = el("g", {});
+  sky.appendChild(el("circle",{cx:C,cy:C,r:R,class:"ck-ring"}));
+  sky.appendChild(el("circle",{cx:C,cy:C,r:R-26,class:"ck-ring-gold"}));
   const rashis = RASHI_TEXT[LANG];
   for(let i=0;i<12;i++){
     const [x1,y1] = pos(i*30, R-26), [x2,y2] = pos(i*30, R);
-    spin.appendChild(el("line",{x1,y1,x2,y2,class:"ck-spoke"}));
-
-    // sector label, rotated to sit along the ring
-    const mid = i*30 + 15;
-    const [lx,ly] = pos(mid, R-13);
-    const t = el("text",{x:lx, y:ly, class:"ck-rashi",
-      "text-anchor":"middle","dominant-baseline":"central",
-      transform:`rotate(${mid} ${lx} ${ly})`}, rashis[i]);
-    spin.appendChild(t);
+    sky.appendChild(el("line",{x1,y1,x2,y2,class:"ck-spoke"}));
+    const mid = i*30 + 15, [lx,ly] = pos(mid, R-13);
+    sky.appendChild(el("text",{x:lx,y:ly,class:"ck-rashi","text-anchor":"middle",
+      "dominant-baseline":"central", transform:`rotate(${mid} ${lx} ${ly})`}, rashis[i]));
   }
+  svg.appendChild(sky);
 
-  // one orbit per graha, innermost = fastest mover
+  /* ---- one orbit per graha; inner rings move fastest, as in the sky ---- */
+  const SPEED = {Chandra:1, Budh:.42, Shukra:.31, Surya:.26,
+                 Mangal:.19, Guru:.09, Shani:.055, Rahu:.04, Ketu:.04};
+  const bodies = [];
   ORBIT_ORDER.forEach((key, i)=>{
     const p = STATE.planets.find(x=>x.key===key);
     if(!p) return;
     const r = 62 + i*18;
-    spin.appendChild(el("circle",{cx:C,cy:C,r,class:"ck-orbit"}));
+    svg.appendChild(el("circle",{cx:C,cy:C,r,class:"ck-orbit"}));
 
-    const lon = (p.lon != null) ? p.lon : p.rashi*30 + (p.degree||15);
-    const [x,y] = pos(lon, r);
-    const g = el("g",{});
-    g.appendChild(el("circle",{cx:x, cy:y, r:11,
-      class:"ck-body" + (p.retro ? " retro" : "")}));
-    // counter-rotate the glyph so it never appears upside down
-    const glyph = el("text",{x, y, class:"ck-glyph" + (p.retro ? " retro" : ""),
-      transform:`rotate(0 ${x} ${y})`}, p.dev);
-    glyph.setAttribute("class", glyph.getAttribute("class"));
-    const holder = el("g",{class:"ck-spin-back", style:`transform-origin:${x}px ${y}px`});
-    holder.appendChild(glyph);
-    g.appendChild(holder);
-    g.appendChild(el("title",null, p.key + (p.retro ? " (vakri)" : "")));
-    spin.appendChild(g);
+    const target = (p.lon != null) ? p.lon : p.rashi*30 + (p.degree || 15);
+    const g = el("g", {});
+    const spoke = el("line",{x1:C,y1:C,x2:C,y2:C,class:"ck-spoke-live"});
+    const disc  = el("circle",{cx:C,cy:C,r:11,
+      class:"ck-body" + (p.retro ? " retro" : "")});
+    const glyph = el("text",{x:C,y:C,class:"ck-glyph" + (p.retro ? " retro" : "")}, p.dev);
+    glyph.appendChild(el("title", null, p.key + (p.retro ? " (vakri)" : "")));
+    g.appendChild(spoke); g.appendChild(disc); g.appendChild(glyph);
+    svg.appendChild(g);
+
+    // start a few turns away so it visibly travels to where it belongs
+    const turns = 2 + i*0.35;
+    bodies.push({r, target, spoke, disc, glyph,
+                 from: target - 360*turns*(p.retro ? -1 : 1),
+                 speed: SPEED[key] || .2});
   });
 
-  // lagna marker
+  /* ---- lagna marker + still centre ---- */
   const lagLon = STATE.lagna.rashi*30 + (STATE.lagna.degree || 0);
   const [mx1,my1] = pos(lagLon, R-30), [mx2,my2] = pos(lagLon, R+8);
-  spin.appendChild(el("line",{x1:mx1,y1:my1,x2:mx2,y2:my2,class:"ck-lagna"}));
+  svg.appendChild(el("line",{x1:mx1,y1:my1,x2:mx2,y2:my2,class:"ck-lagna"}));
 
-  svg.appendChild(spin);
-
-  // still centre
   const core = el("g",{class:"ck-breathe"});
-  core.appendChild(el("text",{x:C,y:C-6,class:"ck-core-big"},
-    RASHI_TEXT[LANG][STATE.lagna.rashi]));
+  core.appendChild(el("text",{x:C,y:C-6,class:"ck-core-big"}, rashis[STATE.lagna.rashi]));
   core.appendChild(el("text",{x:C,y:C+18,class:"ck-core"},
     LANG === "hi" ? "लग्न" : "LAGNA"));
   svg.appendChild(core);
-}
 
+  /* ---- run the orbits, then let them settle where the chart says ---- */
+  const reduce = window.matchMedia &&
+                 window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const place = (b, lon, settled)=>{
+    const [x,y] = pos(lon, b.r);
+    b.disc.setAttribute("cx", x); b.disc.setAttribute("cy", y);
+    b.glyph.setAttribute("x", x); b.glyph.setAttribute("y", y);
+    b.spoke.setAttribute("x2", x); b.spoke.setAttribute("y2", y);
+    b.spoke.style.opacity = settled ? .18 : .5;
+  };
+  if(reduce){ bodies.forEach(b=>place(b, b.target, true)); return; }
+
+  const DUR = 3400, t0 = performance.now();
+  const ease = t => 1 - Math.pow(1 - t, 3);   // fast, then eases into place
+  function frame(now){
+    const t = Math.min(1, (now - t0) / DUR);
+    const e = ease(t);
+    bodies.forEach(b=>{
+      const spread = (b.from - b.target) * b.speed / 1;
+      place(b, b.target + spread*(1 - e), t >= 1);
+    });
+    if(t < 1) CHAKRA_RAF = requestAnimationFrame(frame);
+    else { CHAKRA_RAF = null; svg.classList.add("settled"); }
+  }
+  CHAKRA_RAF = requestAnimationFrame(frame);
+}
 
 /* ===================== sade sati · doshas · dasha ===================== */
 function saturnMark(active){
@@ -627,6 +653,185 @@ function renderToday(){
   }
 }
 
+
+/* ================= share card: a 9:16 image for stories ================= */
+function drawShareCard(){
+  const cv = document.getElementById("shareCanvas");
+  if(!cv || !STATE.nakshatraCard) return;
+  const W = 1080, H = 1920;
+  cv.width = W; cv.height = H;
+  const x = cv.getContext("2d");
+  const hi = LANG === "hi";
+  const n  = STATE.nakshatraCard;
+  const rashi = RASHI_TEXT[LANG][STATE.lagna.rashi];
+
+  // aged palm leaf, the same surface the kundli sits on
+  const g = x.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, "#EFE6D0"); g.addColorStop(1, "#D8CAA6");
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+
+  x.strokeStyle = "rgba(42,36,24,.55)"; x.lineWidth = 3;
+  x.strokeRect(58, 58, W - 116, H - 116);
+  x.lineWidth = 1;
+  x.strokeRect(78, 78, W - 156, H - 156);
+
+  x.textAlign = "center";
+  x.fillStyle = "#8A6E2A";
+  x.font = "500 26px 'IBM Plex Mono', monospace";
+  x.fillText(hi ? "जन्म नक्षत्र" : "BIRTH NAKSHATRA", W/2, 240);
+
+  x.fillStyle = "#1A1710";
+  x.font = hi ? "400 130px 'Tiro Devanagari Hindi', serif"
+              : "300 130px 'Cormorant Garamond', serif";
+  x.fillText(hi ? (n.nameHi || n.name) : n.name, W/2, 400);
+
+  x.fillStyle = "#8A6E2A";
+  x.font = "500 28px 'IBM Plex Mono', monospace";
+  x.fillText(`${hi ? "पाद" : "PADA"} ${n.pada}  ·  ${hi ? n.lordHi : n.lord}`, W/2, 466);
+
+  // the nine grahas around a ring — the chart itself, not decoration
+  const cx = W/2, cy = 1010, R = 300;
+  x.strokeStyle = "rgba(42,36,24,.30)";
+  x.beginPath(); x.arc(cx, cy, R, 0, Math.PI*2); x.stroke();
+  x.beginPath(); x.arc(cx, cy, R - 46, 0, Math.PI*2); x.stroke();
+  for(let i = 0; i < 12; i++){
+    const a = (i*30 - 90) * Math.PI/180;
+    x.beginPath();
+    x.moveTo(cx + Math.cos(a)*(R-46), cy + Math.sin(a)*(R-46));
+    x.lineTo(cx + Math.cos(a)*R,      cy + Math.sin(a)*R);
+    x.stroke();
+  }
+  x.font = "60px 'Tiro Devanagari Sanskrit', serif";
+  (STATE.planets || []).forEach(p=>{
+    const lon = (p.lon != null) ? p.lon : p.rashi*30 + (p.degree || 15);
+    const a = (lon - 90) * Math.PI/180;
+    const r = R - 110;
+    x.fillStyle = p.retro ? "#A8390B" : "#1A1710";
+    x.fillText(p.dev, cx + Math.cos(a)*r, cy + Math.sin(a)*r + 20);
+  });
+  x.fillStyle = "#A8390B";
+  x.beginPath(); x.arc(cx, cy, 9, 0, Math.PI*2); x.fill();
+
+  x.fillStyle = "#1A1710";
+  x.font = hi ? "400 54px 'Tiro Devanagari Hindi', serif"
+              : "300 54px 'Cormorant Garamond', serif";
+  x.fillText(hi ? `${rashi} लग्न` : `${rashi} rising`, W/2, 1450);
+
+  x.fillStyle = "rgba(26,23,16,.62)";
+  x.font = "24px 'IBM Plex Mono', monospace";
+  x.fillText("ASTRO.SANSKRITAGAIN.COM", W/2, 1770);
+}
+
+function downloadShare(){
+  const cv = document.getElementById("shareCanvas");
+  if(!cv) return;
+  cv.toBlob(b=>{
+    const u = URL.createObjectURL(b);
+    const a = document.createElement("a");
+    a.href = u; a.download = "meri-kundli.png"; a.click();
+    setTimeout(()=>URL.revokeObjectURL(u), 4000);
+  }, "image/png");
+}
+
+async function shareNative(){
+  const cv = document.getElementById("shareCanvas");
+  if(!cv) return downloadShare();
+  cv.toBlob(async b=>{
+    const file = new File([b], "meri-kundli.png", {type:"image/png"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file]}); return; }catch(e){}
+    }
+    downloadShare();
+  }, "image/png");
+}
+
+/* ================= whatsapp number, asked once ================= */
+function hasNumber(){
+  try{ return !!sessionStorage.getItem("sa_wa"); }catch(e){ return false; }
+}
+
+function renderGate(){
+  const host = document.getElementById("gate");
+  if(!host) return;
+  if(hasNumber() || !readBirth()){ host.innerHTML = ""; return; }
+  const d = I18N[LANG];
+  host.innerHTML = `<div class="gate">
+    <h3>${d["g.h"]}</h3>
+    <p>${d["g.p"]}</p>
+    <div class="row">
+      <input id="waNum" type="tel" inputmode="numeric" maxlength="10"
+             placeholder="${d["g.ph"]}" aria-label="${d["g.ph"]}">
+      <button class="cta" id="waGo">${d["g.cta"]}</button>
+      <button class="skip" id="waSkip">${d["g.skip"]}</button>
+    </div>
+    <p class="note" id="waNote"></p>
+  </div>`;
+
+  document.getElementById("waGo").addEventListener("click", ()=>{
+    const v = (document.getElementById("waNum").value || "").replace(/\D/g, "");
+    const note = document.getElementById("waNote");
+    if(v.length !== 10){ note.textContent = d["g.bad"]; return; }
+    try{
+      sessionStorage.setItem("sa_wa", v);
+      const b = readBirth(); if(b){ b.wa = v; saveBirth(b); }
+    }catch(e){}
+    host.innerHTML = `<p class="lede" style="font-size:15px">${d["g.done"]}</p>`;
+  });
+  document.getElementById("waSkip").addEventListener("click", ()=>{
+    try{ sessionStorage.setItem("sa_wa", "skipped"); }catch(e){}
+    host.innerHTML = "";
+  });
+}
+
+
+/* ============ dasha triptych: what closed, where you are, what opens ============ */
+function tripDisc(active){
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle class="t-ring" cx="50" cy="50" r="46"/>
+    <circle class="t-disc" cx="50" cy="50" r="34" opacity="${active ? .8 : .4}"/>
+    <g class="t-orbit">
+      <circle class="t-ring" cx="50" cy="50" r="20"/>
+      <circle class="t-dot" cx="70" cy="50" r="3.2"/>
+      <circle class="t-dot" cx="50" cy="16" r="2.2" opacity=".6"/>
+    </g>
+    <circle class="t-dot" cx="50" cy="50" r="${active ? 4.5 : 3}"/>
+  </svg>`;
+}
+
+function monthYear(iso, lang){
+  const M_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const M_HI = ["जन","फ़र","मार्च","अप्रै","मई","जून","जुल","अग","सित","अक्तू","नव","दिस"];
+  const [y, m] = iso.split("-");
+  return `${(lang === "hi" ? M_HI : M_EN)[Number(m) - 1]} ${y}`;
+}
+
+function renderTriptych(){
+  const host = document.getElementById("triptych");
+  if(!host) return;
+  const seq = STATE.antardashaSeq || [], now = STATE.antardasha, maha = STATE.currentDasha;
+  if(!seq.length || !now || !maha){ host.innerHTML = ""; return; }
+
+  const i = seq.findIndex(a => a.start === now.start && a.lord === now.lord);
+  const prev = i > 0 ? seq[i-1] : null;
+  const next = i >= 0 && i < seq.length - 1 ? seq[i+1] : null;
+  const d = I18N[LANG], names = PLANET_TEXT[LANG];
+  const nm = k => names[k] ? names[k][0] : k;
+
+  const cell = (a, cap, active) => a ? `
+    <div class="tcell${active ? " now" : ""}">
+      ${tripDisc(active)}
+      <p class="cap">${cap}</p>
+      <div class="lords">${nm(maha.lord)} / ${nm(a.lord)}</div>
+      <div class="when">${monthYear(a.start, LANG)} &ndash; ${monthYear(a.end, LANG)}</div>
+    </div>` : `<div class="tcell"></div>`;
+
+  host.innerHTML = `<div class="trip">
+    ${cell(prev, d["tr.closed"], false)}
+    ${cell(now,  d["tr.now"],    true)}
+    ${cell(next, d["tr.opens"],  false)}
+  </div>`;
+}
+
 /* =============================== boot =============================== */
 async function boot(){
   applyTheme(currentTheme());
@@ -651,6 +856,7 @@ async function boot(){
         STATE = Object.assign({}, DEMO,
           {panchang:j.panchang, transits:j.transits});
         renderPanchang();
+        renderChakra();
         if(window.onLangChange) window.onLangChange(LANG);
       }
     }catch(e){}
