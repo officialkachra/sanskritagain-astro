@@ -111,7 +111,8 @@ async function fetchChart(birth){
     headers:{"Content-Type":"application/json"},
     body: JSON.stringify({date:birth.date, time:birth.time, lat:birth.lat,
                           lon:birth.lon, tz:birth.tz, concern:birth.concern,
-                          question: birth.question || PICKED_Q || undefined})
+                          question: birth.question || PICKED_Q || undefined,
+                          muhurat: !!document.getElementById("muhurat")})
   });
   const j = await r.json();
   if(!r.ok) throw new Error(j.error || "chart failed");
@@ -179,6 +180,9 @@ function renderAll(){
   renderToday();
   renderYantra();
   renderTriptych();
+  renderNavamsa();
+  renderMuhurat();
+  renderPandulipi();
   renderGate();
   renderCardTabs();
   drawShareCard();
@@ -248,7 +252,7 @@ function renderRecs(){
         <ul class="why">${r.why.map(w=>`<li>${w[LANG]}</li>`).join("")}</ul>
         <div class="vidhi"><span>${d["p.vidhi"]}</span>${r.vidhi[LANG]}</div>
         <a class="cta" style="margin-top:26px"
-           href="https://sanskritagain.com/products/${r.handle}">${d["p.cta"]}</a>
+           href="${productURL(r.key, LANG)}">${d["p.cta"]}</a>
       </div>
     </section>`).join("");
 }
@@ -650,7 +654,7 @@ function renderToday(){
       <h2 class="display" style="margin:12px 0 14px">${pr.title[LANG]}</h2>
       <div class="vidhi" style="margin-top:0"><span>${d["p.vidhi"]}</span>${pr.vidhi[LANG]}</div>
       <a class="cta" style="margin-top:24px"
-         href="https://sanskritagain.com/products/${pr.handle}">${d["p.cta"]}</a>`;
+         href="${productURL(pr.key, LANG)}">${d["p.cta"]}</a>`;
   }
 }
 
@@ -955,6 +959,17 @@ function renderGate(){
       const b = readBirth(); if(b){ b.wa = v; saveBirth(b); }
     }catch(e){}
     host.innerHTML = `<p class="lede" style="font-size:15px">${d["g.done"]}</p>`;
+
+    const b = readBirth() || {}, rec = (STATE.recommendations || [])[0];
+    fetch("/api/lead", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        wa: v, name: b.name || "", date: b.date || "", time: b.time || "",
+        place: b.place || "", lang: LANG,
+        lagna: STATE.lagna ? STATE.lagna.rashiName : "",
+        nakshatra: STATE.nakshatraCard ? STATE.nakshatraCard.name : "",
+        paath: rec ? rec.title.en : "",
+        question: STATE.answer ? STATE.answer.id : ""
+      })}).catch(()=>{});
   });
   document.getElementById("waSkip").addEventListener("click", ()=>{
     try{ sessionStorage.setItem("sa_wa", "skipped"); }catch(e){}
@@ -1009,6 +1024,154 @@ function renderTriptych(){
     ${cell(now,  d["tr.now"],    true)}
     ${cell(next, d["tr.opens"],  false)}
   </div>`;
+}
+
+
+/* ============ made-to-order: their own kundli, typeset ============ */
+function renderPandulipi(){
+  const host = document.getElementById("pandulipi");
+  if(!host) return;
+  const d = I18N[LANG], b = readBirth() || {};
+  const name = (b.name || "").trim();
+  const hi = LANG === "hi";
+
+  // a preview of the leaf that would be typeset
+  const C = 220, S = 300, L = C - S/2, T = 96;
+  const cell = {1:[.50,.20],2:[.25,.08],3:[.08,.24],4:[.28,.50],5:[.08,.76],6:[.25,.94],
+                7:[.50,.80],8:[.75,.94],9:[.92,.76],10:[.72,.50],11:[.92,.24],12:[.75,.08]};
+  let glyphs = "";
+  for(let h = 1; h <= 12; h++){
+    (STATE.planets || []).filter(p=>p.house===h).forEach((p,k)=>{
+      glyphs += `<text class="pl-glyph${p.retro ? " pl-retro" : ""}" font-size="15"
+        text-anchor="middle" x="${(L + cell[h][0]*S).toFixed(1)}"
+        y="${(T + cell[h][1]*S + k*17).toFixed(1)}">${p.dev}</text>`;
+    });
+  }
+  const lagna = RASHI_TEXT[LANG][STATE.lagna.rashi];
+
+  host.innerHTML = `<div class="mto">
+    <div class="leaf-panel">
+      <p class="leaf-cap">${hi ? "पांडुलिपि · नमूना" : "PANDULIPI · PREVIEW"}</p>
+      <svg class="pl-chart" viewBox="0 0 440 520" role="img"
+           aria-label="Preview of the manuscript page">
+        <text class="pl-small" font-size="9" letter-spacing="3"
+              text-anchor="middle" x="220" y="52">${hi ? "जन्म कुंडली" : "JANMA KUNDLI"}</text>
+        ${name ? `<text class="pl-name" font-size="26" text-anchor="middle"
+                        x="220" y="82">${name}</text>` : ""}
+        <g class="pl-line" stroke-width="1.4">
+          <rect x="${L}" y="${T}" width="${S}" height="${S}" stroke-width="2"/>
+          <path d="M${L} ${T} L${L+S} ${T+S}"/><path d="M${L+S} ${T} L${L} ${T+S}"/>
+          <path d="M${L+S/2} ${T} L${L+S} ${T+S/2} L${L+S/2} ${T+S} L${L} ${T+S/2} Z"/>
+        </g>
+        ${glyphs}
+        <text class="pl-small" font-size="9" letter-spacing="2.5"
+              text-anchor="middle" x="220" y="${T+S+42}">${lagna.toUpperCase()} ${hi ? "लग्न" : "LAGNA"}</text>
+        ${b.date ? `<text class="pl-small" font-size="8.5" letter-spacing="1.5"
+              text-anchor="middle" x="220" y="${T+S+62}">${b.date}${b.time ? " · " + b.time : ""}</text>` : ""}
+      </svg>
+    </div>
+
+    <div>
+      <div class="eyebrow">${d["mto.eyebrow"]}</div>
+      <h2 class="display">${d["mto.h"]}</h2>
+      <p class="lede" style="margin:0">${d["mto.p"]}</p>
+      <ul>
+        <li>${d["mto.l1"]}</li>
+        <li>${d["mto.l2"]}</li>
+        <li>${d["mto.l3"]}</li>
+        <li>${d["mto.l4"]}</li>
+      </ul>
+      <p class="price">${d["mto.price"]}<small>${d["mto.made"]}</small></p>
+      <a class="cta" style="margin-top:18px"
+         href="${productURL("kundli_pandulipi", LANG, kundliParams())}">${d["mto.cta"]}</a>
+      <p class="lede" style="font-size:13px;margin-top:16px">${d["mto.note"]}</p>
+    </div>
+  </div>`;
+}
+
+/* the chart travels to the product page as line-item properties,
+   so the order arrives with everything needed to typeset it */
+function kundliParams(){
+  const b = readBirth() || {};
+  const p = new URLSearchParams();
+  if(b.name)  p.set("properties[Name]", b.name);
+  if(b.date)  p.set("properties[Birth date]", b.date);
+  if(b.time)  p.set("properties[Birth time]", b.time);
+  if(b.place) p.set("properties[Birth place]", b.place);
+  if(STATE.lagna) p.set("properties[Lagna]", STATE.lagna.rashiName);
+  if(STATE.nakshatraCard) p.set("properties[Nakshatra]",
+    STATE.nakshatraCard.name + " pada " + STATE.nakshatraCard.pada);
+  return p.toString();
+}
+
+
+/* ================= navamsa + muhurat (their own page) ================= */
+function drawSquareChart(svgId, lagnaRashi, planets){
+  const svg = document.getElementById(svgId);
+  if(!svg) return;
+  svg.textContent = "";
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (t,a,txt)=>{ const n=document.createElementNS(NS,t);
+    for(const k in a) n.setAttribute(k,a[k]);
+    if(txt!=null) n.textContent=txt; return n; };
+
+  const g = el("g",{fill:"none",stroke:"var(--panel-ink)","stroke-width":1.1});
+  g.appendChild(el("rect",{x:0,y:0,width:400,height:400,"stroke-width":2}));
+  g.appendChild(el("path",{d:"M0 0 L400 400"}));
+  g.appendChild(el("path",{d:"M400 0 L0 400"}));
+  g.appendChild(el("path",{d:"M200 0 L400 200 L200 400 L0 200 Z"}));
+  svg.appendChild(g);
+
+  for(let h=1; h<=12; h++){
+    const [[rx,ry],[gx,gy]] = CELLS[h];
+    svg.appendChild(el("text",{x:rx,y:ry,"text-anchor":"middle",class:"k-rashi"},
+      RASHI_ABBR[(lagnaRashi + h - 1) % 12]));
+    if(h === 1)
+      svg.appendChild(el("text",{x:rx,y:ry-15,"text-anchor":"middle",class:"k-lagna"},"LAGNA"));
+    planets.filter(p=>p.house===h).forEach((p,i)=>{
+      const t = el("text",{x:gx, y:gy+i*22, "text-anchor":"middle",
+        class:"k-graha" + (p.retro ? " k-retro" : "")}, p.dev);
+      t.appendChild(el("title", null, p.key + (p.retro ? " (vakri)" : "")));
+      svg.appendChild(t);
+    });
+  }
+}
+
+function renderNavamsa(){
+  if(!document.getElementById("d9-chart")) return;
+  drawSquareChart("d1-chart", STATE.lagna.rashi, STATE.planets);
+  if(STATE.navamsa)
+    drawSquareChart("d9-chart", STATE.navamsa.lagna, STATE.navamsa.planets);
+
+  const note = document.getElementById("d9-note");
+  if(note && STATE.navamsa){
+    const r = RASHI_TEXT[LANG];
+    note.textContent = LANG === "hi"
+      ? `नवांश लग्न ${r[STATE.navamsa.lagna]} है, जन्म लग्न ${r[STATE.lagna.rashi]}।`
+      : `Navamsa rises in ${r[STATE.navamsa.lagna]}; the birth chart rises in ${r[STATE.lagna.rashi]}.`;
+  }
+}
+
+function renderMuhurat(){
+  const host = document.getElementById("muhurat");
+  if(!host) return;
+  const m = STATE.muhurat;
+  if(!m || !m.best){ host.innerHTML = ""; return; }
+  const M_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const M_HI = ["जन","फ़र","मार्च","अप्रै","मई","जून","जुल","अग","सित","अक्तू","नव","दिस"];
+
+  host.innerHTML = m.best.map(x=>{
+    const [y, mo, dd] = x.date.split("-");
+    const mon = (LANG === "hi" ? M_HI : M_EN)[Number(mo) - 1];
+    const pips = [0,1,2].map(i=>
+      `<i class="${x.score > i ? "on" : ""}"></i>`).join("");
+    const nak = LANG === "hi" ? (x.nakshatraHi || x.nakshatra) : x.nakshatra;
+    return `<div class="mu-row">
+      <span class="dt">${Number(dd)} ${mon}<small>${x.vara[LANG]}</small></span>
+      <span class="mid">${x.tithi} &middot; ${nak}<em>${x.why[LANG]}</em></span>
+      <span class="pip">${pips}</span>
+    </div>`;
+  }).join("");
 }
 
 /* =============================== boot =============================== */

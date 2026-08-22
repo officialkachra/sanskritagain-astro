@@ -465,3 +465,46 @@ body[data-lang="hi"] .tcell.now .lords{font-size:25px}
 #cardTabs .chip{padding:8px 13px}
 .sharewrap{align-items:start}
 #shareCanvas{background:var(--ink-2);transition:opacity .25s ease}
+
+/* ---------------- made-to-order pandulipi ---------------- */
+.mto{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;
+  padding:56px 0;border-top:1px solid var(--hair)}
+.mto .leaf-panel{padding:38px 34px}
+.mto h2{margin:12px 0 16px}
+.mto ul{list-style:none;padding:0;margin:20px 0 0}
+.mto li{position:relative;padding-left:22px;margin-bottom:11px;color:var(--leaf);opacity:.9}
+.mto li::before{content:"—";position:absolute;left:0;color:var(--gold)}
+.mto .price{font-family:'Cormorant Garamond',serif;font-size:38px;color:var(--gold);
+  margin:24px 0 6px}
+.mto .price small{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--quiet);
+  letter-spacing:.12em;margin-left:10px}
+.pl-chart{width:100%;height:auto;display:block}
+.pl-line{stroke:#2A2418;fill:none}
+.pl-glyph{font-family:'Tiro Devanagari Sanskrit',serif;fill:#1A1710}
+.pl-retro{fill:#A8390B}
+.pl-small{font-family:'IBM Plex Mono',monospace;fill:#8A7C58}
+.pl-name{font-family:'Tiro Devanagari Hindi',serif;fill:#1A1710}
+@media (max-width:860px){.mto{grid-template-columns:1fr;gap:30px}}
+
+/* ---------------- navamsa side-by-side ---------------- */
+.d9-pair{display:grid;grid-template-columns:1fr 1fr;gap:38px;margin-top:34px}
+.d9-cap{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:#6E6247;text-align:center;margin:0 0 16px}
+@media (max-width:860px){.d9-pair{grid-template-columns:1fr;gap:26px}}
+
+/* ---------------- muhurat list ---------------- */
+.mu-row{display:grid;grid-template-columns:96px 1fr auto;gap:20px;align-items:center;
+  padding:18px 0;border-bottom:1px solid var(--hair)}
+.mu-row .dt{font-family:'Cormorant Garamond',serif;font-size:26px;line-height:1;
+  color:var(--gold)}
+.mu-row .dt small{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:.14em;color:var(--quiet);margin-top:6px}
+body[data-lang="hi"] .mu-row .dt small{font-family:'Tiro Devanagari Hindi',serif;
+  font-size:12px;letter-spacing:0}
+.mu-row .mid{font-size:15px}
+.mu-row .mid em{font-style:normal;color:var(--quiet);display:block;font-size:14px;margin-top:4px}
+.mu-row .pip{display:flex;gap:4px}
+.mu-row .pip i{width:7px;height:7px;border-radius:50%;background:var(--hair);display:block}
+.mu-row .pip i.on{background:var(--gold)}
+@media (max-width:860px){.mu-row{grid-template-columns:78px 1fr;gap:14px}
+  .mu-row .pip{display:none}}

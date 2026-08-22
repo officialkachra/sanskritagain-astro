@@ -1117,6 +1117,77 @@ def guna_milan(bride, groom):
             "verdict": verdict, "doshas": doshas}
 
 
+
+# ------------------------------------------------------------- navamsa (D9)
+def navamsa(P, lagna_lon):
+    """Each rashi split into nine. The chart astrologers read for marriage."""
+    span = 30 / 9
+    def d9(lon):
+        return int((lon % 360) // span) % 12
+    lag = d9(lagna_lon)
+    out = []
+    for k, v in P.items():
+        r = d9(v["longitude"])
+        out.append({"key": k, "dev": v["dev"], "rashi": r, "retro": v["retro"],
+                    "house": ((r - lag) % 12) + 1})
+    return {"lagna": lag, "lagnaName": RASHIS[lag], "planets": out}
+
+
+# ---------------------------------------------------------------- muhurat
+RIKTA = {3, 7, 12}          # 4th, 8th, 14th tithi — traditionally avoided
+
+
+def muhurat(P, days=30):
+    """Days in the next month that suit this chart. Moon-based, as tradition has it."""
+    natal_moon = P["Chandra"]["rashi"]
+    good_offsets = {0, 2, 5, 6, 9, 10}      # 1,3,6,7,10,11 from natal Moon
+    hard_offsets = {3, 7, 11}               # 4,8,12 from natal Moon
+    out = []
+    for i in range(days):
+        d = datetime.now() + timedelta(days=i)
+        tr = transits(d.replace(hour=8, minute=0))
+        off = (tr["Chandra"]["rashi"] - natal_moon) % 12
+        diff = (tr["Chandra"]["longitude"] - tr["Surya"]["longitude"]) % 360
+        ti = int(diff // 12)
+
+        score = 0
+        why_en, why_hi = [], []
+        if off in good_offsets:
+            score += 2
+            why_en.append("Moon well placed from yours")
+            why_hi.append("चंद्रमा आपके चंद्र से शुभ स्थान पर")
+        elif off in hard_offsets:
+            score -= 2
+            why_en.append("Moon in a hard spot from yours")
+            why_hi.append("चंद्रमा आपके चंद्र से कठिन स्थान पर")
+        if (ti % 15) in RIKTA:
+            score -= 2
+            why_en.append("Rikta tithi")
+            why_hi.append("रिक्ता तिथि")
+        if ti == 14 or ti == 29:
+            score -= 1
+            why_en.append("Purnima/Amavasya")
+            why_hi.append("पूर्णिमा/अमावस्या")
+        if ti == 10:
+            score += 1
+            why_en.append("Ekadashi")
+            why_hi.append("एकादशी")
+
+        v_en, v_hi, v_lord = VARAS[d.weekday()]
+        out.append({
+            "date": d.date().isoformat(),
+            "vara": {"en": v_en, "hi": v_hi},
+            "tithi": TITHIS[ti % 15],
+            "nakshatra": tr["Chandra"]["nakshatra"],
+            "nakshatraHi": NAK_HI.get(tr["Chandra"]["nakshatra"], tr["Chandra"]["nakshatra"]),
+            "score": score,
+            "why": {"en": ", ".join(why_en) or "Ordinary day",
+                    "hi": ", ".join(why_hi) or "सामान्य दिन"},
+        })
+    best = sorted(out, key=lambda x: (-x["score"], x["date"]))[:6]
+    return {"best": sorted(best, key=lambda x: x["date"]), "all": out}
+
+
 # ----------------------------------------------------------------- handler
 def _moon_of(person):
     birth = datetime.strptime(f"{person['date']} {person.get('time') or '12:00'}",
@@ -1164,6 +1235,8 @@ def build_response(body):
         "antardashaSeq": anta_seq[:9],
         "panchang": pan,
         "nakshatraCard": nakshatra_card(P),
+        "navamsa": navamsa(P, chart["lagna"]["longitude"]),
+        "muhurat": muhurat(P) if body.get("muhurat") else None,
         "today": today_reading(P, tr, pan, sade_sati(P["Chandra"]["rashi"], tr)),
         "transits": [{"key": k, "dev": v["dev"], "rashi": v["rashi"],
                       "retro": v["retro"], "lon": round(v["longitude"], 2)}
