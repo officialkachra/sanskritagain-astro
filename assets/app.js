@@ -712,16 +712,34 @@ function cardFooter(x, W, H, sk){
 }
 
 function ringOfGrahas(x, cx, cy, R, sk, small){
+  const hi = LANG === "hi";
   x.strokeStyle = sk.soft; x.lineWidth = 1;
   x.beginPath(); x.arc(cx, cy, R, 0, Math.PI*2); x.stroke();
   x.beginPath(); x.arc(cx, cy, R-44, 0, Math.PI*2); x.stroke();
+
+  const names = RASHI_TEXT[LANG];
   for(let i=0;i<12;i++){
     const a = (-i*30 - 90)*Math.PI/180;
     x.beginPath();
     x.moveTo(cx+Math.cos(a)*(R-44), cy+Math.sin(a)*(R-44));
     x.lineTo(cx+Math.cos(a)*R,      cy+Math.sin(a)*R);
     x.stroke();
+
+    // rashi name, sitting in the band and turned to follow the ring
+    const mid = -(i*30 + 15) - 90;
+    const rad = mid*Math.PI/180, rr = R - 22;
+    const lx = cx + Math.cos(rad)*rr, ly = cy + Math.sin(rad)*rr;
+    x.save();
+    x.translate(lx, ly);
+    x.rotate(rad + Math.PI/2);
+    x.fillStyle = sk.gold;
+    x.font = (hi ? "400 " : "500 ") + (small ? 18 : 22) + "px " +
+             (hi ? cardFonts(true).disp : cardFonts(false).mono);
+    x.textAlign = "center"; x.textBaseline = "middle";
+    x.fillText(hi ? names[i] : names[i].slice(0,3).toUpperCase(), 0, 0);
+    x.restore();
   }
+  x.textAlign = "center"; x.textBaseline = "alphabetic";
   x.font = (small ? 46 : 58) + "px " + cardFonts(false).dev;
   (STATE.planets || []).forEach(p=>{
     const lon = (p.lon != null) ? p.lon : p.rashi*30 + (p.degree || 15);
@@ -729,6 +747,14 @@ function ringOfGrahas(x, cx, cy, R, sk, small){
     x.fillStyle = p.retro ? sk.red : sk.ink;
     x.fillText(p.dev, cx+Math.cos(a)*r, cy+Math.sin(a)*r + (small ? 16 : 20));
   });
+  // the lagna, marked in red on the rim
+  const la = (-(STATE.lagna.rashi*30 + (STATE.lagna.degree || 0)) - 90)*Math.PI/180;
+  x.strokeStyle = sk.red; x.lineWidth = 3;
+  x.beginPath();
+  x.moveTo(cx+Math.cos(la)*(R-50), cy+Math.sin(la)*(R-50));
+  x.lineTo(cx+Math.cos(la)*(R+14), cy+Math.sin(la)*(R+14));
+  x.stroke();
+  x.lineWidth = 1;
   x.fillStyle = sk.red;
   x.beginPath(); x.arc(cx, cy, 8, 0, Math.PI*2); x.fill();
 }
