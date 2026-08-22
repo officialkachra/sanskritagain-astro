@@ -291,8 +291,9 @@ function renderChakra(){
     if(txt!=null) n.textContent=txt; return n; };
 
   const C = 260, R = 236;
+  // rashis increase anti-clockwise, as the chakra is always drawn
   const pos = (lon, r)=>{
-    const rad = (lon - 90) * Math.PI/180;
+    const rad = (-lon - 90) * Math.PI/180;
     return [C + r*Math.cos(rad), C + r*Math.sin(rad)];
   };
 
@@ -306,7 +307,7 @@ function renderChakra(){
     sky.appendChild(el("line",{x1,y1,x2,y2,class:"ck-spoke"}));
     const mid = i*30 + 15, [lx,ly] = pos(mid, R-13);
     sky.appendChild(el("text",{x:lx,y:ly,class:"ck-rashi","text-anchor":"middle",
-      "dominant-baseline":"central", transform:`rotate(${mid} ${lx} ${ly})`}, rashis[i]));
+      "dominant-baseline":"central", transform:`rotate(${-mid} ${lx} ${ly})`}, rashis[i]));
   }
   svg.appendChild(sky);
 
@@ -715,7 +716,7 @@ function ringOfGrahas(x, cx, cy, R, sk, small){
   x.beginPath(); x.arc(cx, cy, R, 0, Math.PI*2); x.stroke();
   x.beginPath(); x.arc(cx, cy, R-44, 0, Math.PI*2); x.stroke();
   for(let i=0;i<12;i++){
-    const a = (i*30 - 90)*Math.PI/180;
+    const a = (-i*30 - 90)*Math.PI/180;
     x.beginPath();
     x.moveTo(cx+Math.cos(a)*(R-44), cy+Math.sin(a)*(R-44));
     x.lineTo(cx+Math.cos(a)*R,      cy+Math.sin(a)*R);
@@ -724,7 +725,7 @@ function ringOfGrahas(x, cx, cy, R, sk, small){
   x.font = (small ? 46 : 58) + "px " + cardFonts(false).dev;
   (STATE.planets || []).forEach(p=>{
     const lon = (p.lon != null) ? p.lon : p.rashi*30 + (p.degree || 15);
-    const a = (lon - 90)*Math.PI/180, r = R - (small ? 86 : 106);
+    const a = (-lon - 90)*Math.PI/180, r = R - (small ? 86 : 106);
     x.fillStyle = p.retro ? sk.red : sk.ink;
     x.fillText(p.dev, cx+Math.cos(a)*r, cy+Math.sin(a)*r + (small ? 16 : 20));
   });
