@@ -875,10 +875,16 @@ def openrouter_answer(answer, P, chart, maha, lang):
         if "thinking process" in content.lower():
             return answer
         try:
-            parsed = json.loads(content)
+            cleaned = content.strip()
+            if cleaned.startswith("```"):
+                start = cleaned.find("{")
+                end = cleaned.rfind("}") + 1
+                cleaned = cleaned[start:end] if start >= 0 and end > start else cleaned
+            parsed = json.loads(cleaned)
             raw_lines = parsed.get("lines", [])
         except json.JSONDecodeError:
-            raw_lines = [line for line in content.splitlines() if line.strip()]
+            raw_lines = [line for line in content.splitlines()
+                         if line.strip() and not line.strip().startswith("```")]
         lines = [str(x).strip(" -•\t")[:320] for x in raw_lines if str(x).strip(" -•\t")]
         if len(lines) >= 2:
             enriched = dict(answer)
